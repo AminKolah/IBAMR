@@ -1164,6 +1164,8 @@ c
       subroutine lagrangian_ib_4_interp2d(
      &     dx,x_lower,x_upper,depth,
      &     ilower0,iupper0,ilower1,iupper1,
+     &     patch_touches_lower_physical_bdry,
+     &     patch_touches_upper_physical_bdry,
      &     nugc0,nugc1,
      &     u,
      &     indices,Xshift,nindices,
@@ -1177,6 +1179,9 @@ c
       INTEGER ilower0,iupper0,ilower1,iupper1
       INTEGER nugc0,nugc1
       INTEGER nindices
+
+      INTEGER patch_touches_lower_physical_bdry(0:NDIM-1)
+      INTEGER patch_touches_upper_physical_bdry(0:NDIM-1)
 
       INTEGER indices(0:nindices-1)
 
@@ -1201,6 +1206,10 @@ c
       REAL X_o_dx,q0,q1,r0,r1
       REAL w0(0:3),w1(0:3),f(0:3)
       REAL w(0:3,0:3),wy
+
+      LOGICAL account_for_phys_bdry
+      LOGICAL touches_lower_bdry(0:NDIM-1)
+      LOGICAL touches_upper_bdry(0:NDIM-1)
 c
 c     Compute the extents of the ghost box.
 c
@@ -1209,13 +1218,24 @@ c
       ig_upper(0) = iupper0+nugc0
       ig_upper(1) = iupper1+nugc1
 c
-c     Use the IB 4-point delta function to interpolate u onto V.
+c     Determine if we need to account for physical boundaries.
+c
+      account_for_phys_bdry = .false.
+      do d = 0,NDIM-1
+         account_for_phys_bdry = account_for_phys_bdry    .or.
+     &        (patch_touches_lower_physical_bdry(d).eq.1) .or.
+     &        (patch_touches_upper_physical_bdry(d).eq.1)
+      enddo
+c
+c     Use the IB 4-point delta function to interpolate u onto V, but use
+c     a modified delta function near physical boundaries.
 c
       do l = 0,nindices-1
          s = indices(l)
 c
-c     Determine the interpolation stencil corresponding to the position
-c     of X(s) within the cell and compute the interpolation weights.
+c     Determine the standard interpolation stencil corresponding to the
+c     position of X(s) within the cell and compute the standard
+c     interpolation weights.
 c
          X_o_dx = (X(0,s)+Xshift(0,l)-x_lower(0))/dx(0)
          ic_lower(0) = NINT(X_o_dx)+ilower0-2
@@ -1236,6 +1256,50 @@ c
          w1(1) = 0.125d0*(3.d0-2.d0*r1+q1)
          w1(2) = 0.125d0*(1.d0+2.d0*r1+q1)
          w1(3) = 0.125d0*(1.d0+2.d0*r1-q1)
+c
+c     When necessary, modify the interpolation stencil and weights near
+c     physical boundaries.
+c
+         if ( account_for_phys_bdry ) then
+            do d = 0,NDIM-1
+               touches_lower_bdry(d) =
+     &              (patch_touches_lower_physical_bdry(d).eq.1) .and.
+     &              (X(d,s) - x_lower(d) .lt. 1.5d0*dx(d))
+               touches_upper_bdry(d) =
+     &              (patch_touches_upper_physical_bdry(d).eq.1) .and.
+     &              (x_upper(d) - X(d,s) .lt. 1.5d0*dx(d))
+            enddo
+
+            if (touches_lower_bdry(0)) then
+               call lagrangian_one_sided_ib_4_delta(
+     &              w0,(X(0,s)-x_lower(0))/dx(0))
+               ic_lower(0) = ilower0
+               ic_upper(0) = ilower0+3
+            elseif (touches_upper_bdry(0)) then
+               call lagrangian_one_sided_ib_4_delta(
+     &              f,(x_upper(0)-X(0,s))/dx(0))
+               ic_lower(0) = iupper0-3
+               ic_upper(0) = iupper0
+               do k = 0,3
+                  w0(3-k) = f(k)
+               enddo
+            endif
+
+            if (touches_lower_bdry(1)) then
+               call lagrangian_one_sided_ib_4_delta(
+     &              w1,(X(1,s)-x_lower(1))/dx(1))
+               ic_lower(1) = ilower1
+               ic_upper(1) = ilower1+3
+            elseif (touches_upper_bdry(1)) then
+               call lagrangian_one_sided_ib_4_delta(
+     &              f,(x_upper(1)-X(1,s))/dx(1))
+               ic_lower(1) = iupper1-3
+               ic_upper(1) = iupper1
+               do k = 0,3
+                  w1(3-k) = f(k)
+               enddo
+            endif
+         endif
 c
 c     Compute the tensor product of the interpolation weights.
 c
@@ -1283,6 +1347,8 @@ c
      &     indices,Xshift,nindices,
      &     X,V,
      &     ilower0,iupper0,ilower1,iupper1,
+     &     patch_touches_lower_physical_bdry,
+     &     patch_touches_upper_physical_bdry,
      &     nugc0,nugc1,
      &     u)
 c
@@ -1296,6 +1362,9 @@ c
       INTEGER nugc0,nugc1
 
       INTEGER indices(0:nindices-1)
+
+      INTEGER patch_touches_lower_physical_bdry(0:NDIM-1)
+      INTEGER patch_touches_upper_physical_bdry(0:NDIM-1)
 
       REAL Xshift(0:NDIM-1,0:nindices-1)
 
@@ -1318,6 +1387,10 @@ c
       REAL X_o_dx,q0,q1,r0,r1
       REAL w0(0:3),w1(0:3),f(0:3)
       REAL w(0:3,0:3),wy
+
+      LOGICAL account_for_phys_bdry
+      LOGICAL touches_lower_bdry(0:NDIM-1)
+      LOGICAL touches_upper_bdry(0:NDIM-1)
 c
 c     Compute the extents of the ghost box.
 c
@@ -1326,13 +1399,24 @@ c
       ig_upper(0) = iupper0+nugc0
       ig_upper(1) = iupper1+nugc1
 c
-c     Use the IB 4-point delta function to spread V onto u.
+c     Determine if we need to account for physical boundaries.
+c
+      account_for_phys_bdry = .false.
+      do d = 0,NDIM-1
+         account_for_phys_bdry = account_for_phys_bdry    .or.
+     &        (patch_touches_lower_physical_bdry(d).eq.1) .or.
+     &        (patch_touches_upper_physical_bdry(d).eq.1)
+      enddo
+c
+c     Use the IB 4-point delta function to spread V onto u, but use
+c     a modified delta function near physical boundaries.
 c
       do l = 0,nindices-1
          s = indices(l)
 c
-c     Determine the interpolation stencil corresponding to the position
-c     of X(s) within the cell and compute the interpolation weights.
+c     Determine the standard interpolation stencil corresponding to the
+c     position of X(s) within the cell and compute the standard
+c     interpolation weights.
 c
          X_o_dx = (X(0,s)+Xshift(0,l)-x_lower(0))/dx(0)
          ic_lower(0) = NINT(X_o_dx)+ilower0-2
@@ -1353,6 +1437,50 @@ c
          w1(1) = 0.125d0*(3.d0-2.d0*r1+q1)
          w1(2) = 0.125d0*(1.d0+2.d0*r1+q1)
          w1(3) = 0.125d0*(1.d0+2.d0*r1-q1)
+c
+c     When necessary, modify the interpolation stencil and weights near
+c     physical boundaries.
+c
+         if ( account_for_phys_bdry ) then
+            do d = 0,NDIM-1
+               touches_lower_bdry(d) =
+     &              (patch_touches_lower_physical_bdry(d).eq.1) .and.
+     &              (X(d,s) - x_lower(d) .lt. 1.5d0*dx(d))
+               touches_upper_bdry(d) =
+     &              (patch_touches_upper_physical_bdry(d).eq.1) .and.
+     &              (x_upper(d) - X(d,s) .lt. 1.5d0*dx(d))
+            enddo
+
+            if (touches_lower_bdry(0)) then
+               call lagrangian_one_sided_ib_4_delta(
+     &              w0,(X(0,s)-x_lower(0))/dx(0))
+               ic_lower(0) = ilower0
+               ic_upper(0) = ilower0+3
+            elseif (touches_upper_bdry(0)) then
+               call lagrangian_one_sided_ib_4_delta(
+     &              f,(x_upper(0)-X(0,s))/dx(0))
+               ic_lower(0) = iupper0-3
+               ic_upper(0) = iupper0
+               do k = 0,3
+                  w0(3-k) = f(k)
+               enddo
+            endif
+
+            if (touches_lower_bdry(1)) then
+               call lagrangian_one_sided_ib_4_delta(
+     &              w1,(X(1,s)-x_lower(1))/dx(1))
+               ic_lower(1) = ilower1
+               ic_upper(1) = ilower1+3
+            elseif (touches_upper_bdry(1)) then
+               call lagrangian_one_sided_ib_4_delta(
+     &              f,(x_upper(1)-X(1,s))/dx(1))
+               ic_lower(1) = iupper1-3
+               ic_upper(1) = iupper1
+               do k = 0,3
+                  w1(3-k) = f(k)
+               enddo
+            endif
+         endif
 c
 c     Compute the tensor product of the scaled interpolation weights.
 c
