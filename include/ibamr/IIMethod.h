@@ -121,23 +121,23 @@ public:
      * \brief Constructor.
      */
     IIMethod(const std::string& object_name,
-                      SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
-                      libMesh::MeshBase* mesh,
-                      int max_level_number,
-                      bool register_for_restart = true,
-                      const std::string& restart_read_dirname = "",
-                      unsigned int restart_restore_number = 0);
+             SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
+             libMesh::MeshBase* mesh,
+             int max_level_number,
+             bool register_for_restart = true,
+             const std::string& restart_read_dirname = "",
+             unsigned int restart_restore_number = 0);
 
     /*!
      * \brief Constructor.
      */
     IIMethod(const std::string& object_name,
-                      SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
-                      const std::vector<libMesh::MeshBase*>& meshes,
-                      int max_level_number,
-                      bool register_for_restart = true,
-                      const std::string& restart_read_dirname = "",
-                      unsigned int restart_restore_number = 0);
+             SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
+             const std::vector<libMesh::MeshBase*>& meshes,
+             int max_level_number,
+             bool register_for_restart = true,
+             const std::string& restart_read_dirname = "",
+             unsigned int restart_restore_number = 0);
 
     /*!
      * \brief Destructor.
@@ -168,8 +168,7 @@ public:
         void* ctx;
     };
 
-
-     /*!
+    /*!
      * Register relevant part to use discontinuous element type family (L2_LAGRANGE or MONOMIAL)
      * for the calculation of jump/traction quantities. This option should be used for geometries with
      * sharp corners.
@@ -188,8 +187,7 @@ public:
      */
     void registerTangentialVelocityMotion(unsigned int part = 0);
 
-
-     /*!
+    /*!
      * Register relevant part for which we would like to normalize the pressure jump.
      *
      * \note This is only recommended for enclosed bodies.
@@ -607,9 +605,9 @@ protected:
     std::vector<libMesh::MeshBase*> d_meshes;
     int d_max_level_number;
     std::vector<libMesh::EquationSystems*> d_equation_systems;
-    std::vector<bool> d_use_discon_elem_for_jumps = {false};
-	std::vector<bool> d_use_tangential_velocity = {false};
-	std::vector<bool> d_normalize_pressure_jump = {false};
+    std::vector<bool> d_use_discon_elem_for_jumps = { false };
+    std::vector<bool> d_use_tangential_velocity = { false };
+    std::vector<bool> d_normalize_pressure_jump = { false };
     const unsigned int d_num_parts = 1;
     std::vector<IBTK::FEDataManager*> d_fe_data_managers;
     SAMRAI::hier::IntVector<NDIM> d_ghosts = 0;

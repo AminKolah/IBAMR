@@ -343,11 +343,10 @@ main(int argc, char* argv[])
         }
         Pointer<IBStrategy> ib_ops;
         if (use_boundary_mesh)
-            ib_ops = new IIMethod(
-                "IIMethod",
-                app_initializer->getComponentDatabase("IIMethod"),
-                &mesh,
-                app_initializer->getComponentDatabase("GriddingAlgorithm")->getInteger("max_levels"));
+            ib_ops = new IIMethod("IIMethod",
+                                  app_initializer->getComponentDatabase("IIMethod"),
+                                  &mesh,
+                                  app_initializer->getComponentDatabase("GriddingAlgorithm")->getInteger("max_levels"));
         else
             ib_ops =
                 new IBFEMethod("IBFEMethod",
@@ -388,8 +387,7 @@ main(int argc, char* argv[])
             Pointer<IIMethod> ibfe_ops = ib_ops;
             ibfe_ops->initializeFEEquationSystems();
             equation_systems = ibfe_ops->getFEDataManager()->getEquationSystems();
-            IIMethod::LagSurfaceForceFcnData surface_fcn_data(
-                tether_force_function, sys_data, tether_data_ptr);
+            IIMethod::LagSurfaceForceFcnData surface_fcn_data(tether_force_function, sys_data, tether_data_ptr);
             ibfe_ops->registerLagSurfaceForceFunction(surface_fcn_data);
         }
         else
