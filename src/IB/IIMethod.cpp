@@ -16,7 +16,6 @@
 #include "ibamr/IIMethod.h"
 #include "ibamr/INSHierarchyIntegrator.h"
 #include "ibamr/ibamr_utilities.h"
-#include "ibamr/namespaces.h" // IWYU pragma: keep
 
 #include "ibtk/FEDataInterpolation.h"
 #include "ibtk/FEDataManager.h"
@@ -90,6 +89,8 @@
 
 #include "petscvec.h"
 
+#include "ibamr/namespaces.h" // IWYU pragma: keep
+
 IBTK_DISABLE_EXTRA_WARNINGS
 #include <boost/math/special_functions/round.hpp>
 #include <boost/multi_array.hpp>
@@ -156,22 +157,22 @@ const std::string IIMethod::PRESSURE_OUT_SYSTEM_NAME = "One sided exterior press
 const std::string IIMethod::TAU_IN_SYSTEM_NAME = "Interior traction system";
 const std::string IIMethod::TAU_OUT_SYSTEM_NAME = "Exterior traction system";
 const std::array<std::string, NDIM> IIMethod::VELOCITY_JUMP_SYSTEM_NAME = { { "velocity [[du]] jump system",
-                                                                                       "velocity [[dv]] jump system"
+                                                                              "velocity [[dv]] jump system"
 #if (NDIM == 3)
-                                                                                       ,
-                                                                                       "velocity [[dw]] jump system"
+                                                                              ,
+                                                                              "velocity [[dw]] jump system"
 #endif
 } };
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 IIMethod::IIMethod(const std::string& object_name,
-                                     Pointer<Database> input_db,
-                                     MeshBase* mesh,
-                                     int max_level_number,
-                                     bool register_for_restart,
-                                     const std::string& restart_read_dirname,
-                                     unsigned int restart_restore_number)
+                   Pointer<Database> input_db,
+                   MeshBase* mesh,
+                   int max_level_number,
+                   bool register_for_restart,
+                   const std::string& restart_read_dirname,
+                   unsigned int restart_restore_number)
 {
     commonConstructor(object_name,
                       input_db,
@@ -184,12 +185,12 @@ IIMethod::IIMethod(const std::string& object_name,
 } // IIMethod
 
 IIMethod::IIMethod(const std::string& object_name,
-                                     Pointer<Database> input_db,
-                                     const std::vector<MeshBase*>& meshes,
-                                     int max_level_number,
-                                     bool register_for_restart,
-                                     const std::string& restart_read_dirname,
-                                     unsigned int restart_restore_number)
+                   Pointer<Database> input_db,
+                   const std::vector<MeshBase*>& meshes,
+                   int max_level_number,
+                   bool register_for_restart,
+                   const std::string& restart_read_dirname,
+                   unsigned int restart_restore_number)
     : d_num_parts(static_cast<int>(meshes.size()))
 {
     commonConstructor(object_name,
@@ -224,7 +225,6 @@ IIMethod::getFEDataManager(const unsigned int part) const
     return d_fe_data_managers[part];
 } // getFEDataManager
 
-
 void
 IIMethod::registerDisconElemFamilyForJumps(const unsigned int part)
 {
@@ -242,7 +242,6 @@ IIMethod::registerTangentialVelocityMotion(const unsigned int part)
     return;
 } // registerTangentialVelocityMotion
 
-
 void
 IIMethod::registerPressureJumpNormalization(const unsigned int part)
 {
@@ -253,8 +252,7 @@ IIMethod::registerPressureJumpNormalization(const unsigned int part)
 } // registerPressureJumpNormalization
 
 void
-IIMethod::registerInitialCoordinateMappingFunction(const CoordinateMappingFcnData& data,
-                                                            const unsigned int part)
+IIMethod::registerInitialCoordinateMappingFunction(const CoordinateMappingFcnData& data, const unsigned int part)
 {
     TBOX_ASSERT(part < d_num_parts);
     d_coordinate_mapping_fcn_data[part] = data;
@@ -329,7 +327,6 @@ IIMethod::preprocessIntegrateData(double current_time, double new_time, int /*nu
     d_new_time = new_time;
     d_half_time = current_time + 0.5 * (new_time - current_time);
 
-
     // Extract the FE data.
     d_X_systems.resize(d_num_parts);
     d_X_current_vecs.resize(d_num_parts);
@@ -368,9 +365,9 @@ IIMethod::preprocessIntegrateData(double current_time, double new_time, int /*nu
     d_P_out_half_vecs.resize(d_num_parts);
     d_P_out_IB_ghost_vecs.resize(d_num_parts);
 
-	d_DU_jump_systems.resize(d_num_parts);
-	d_DU_jump_half_vecs.resize(d_num_parts);
-	d_DU_jump_IB_ghost_vecs.resize(d_num_parts);
+    d_DU_jump_systems.resize(d_num_parts);
+    d_DU_jump_half_vecs.resize(d_num_parts);
+    d_DU_jump_IB_ghost_vecs.resize(d_num_parts);
 
     d_WSS_in_systems.resize(d_num_parts);
     d_WSS_in_half_vecs.resize(d_num_parts);
@@ -546,18 +543,18 @@ IIMethod::postprocessIntegrateData(double /*current_time*/, double /*new_time*/,
         vec_collection_update.push_back(d_P_jump_half_vecs);
         vec_collection_update.push_back(d_P_in_half_vecs);
         vec_collection_update.push_back(d_P_out_half_vecs);
-        }
-	if (d_use_velocity_jump_conditions)
-	{
-	    vec_collection_update.push_back(d_WSS_in_half_vecs);
-	    vec_collection_update.push_back(d_WSS_out_half_vecs);
-	}
-	if (d_compute_fluid_traction)
-	{
-	    vec_collection_update.push_back(d_TAU_in_half_vecs);
-	    vec_collection_update.push_back(d_TAU_out_half_vecs);
-	}
-	batch_vec_ghost_update(vec_collection_update, INSERT_VALUES, SCATTER_FORWARD);
+    }
+    if (d_use_velocity_jump_conditions)
+    {
+        vec_collection_update.push_back(d_WSS_in_half_vecs);
+        vec_collection_update.push_back(d_WSS_out_half_vecs);
+    }
+    if (d_compute_fluid_traction)
+    {
+        vec_collection_update.push_back(d_TAU_in_half_vecs);
+        vec_collection_update.push_back(d_TAU_out_half_vecs);
+    }
+    batch_vec_ghost_update(vec_collection_update, INSERT_VALUES, SCATTER_FORWARD);
 
     if (d_compute_fluid_traction)
     {
@@ -658,10 +655,9 @@ IIMethod::postprocessIntegrateData(double /*current_time*/, double /*new_time*/,
     d_P_jump_half_vecs.clear();
     d_P_jump_IB_ghost_vecs.clear();
 
-
-	d_DU_jump_systems.clear();
-	d_DU_jump_half_vecs.clear();
-	d_DU_jump_IB_ghost_vecs.clear();
+    d_DU_jump_systems.clear();
+    d_DU_jump_half_vecs.clear();
+    d_DU_jump_IB_ghost_vecs.clear();
 
     d_WSS_in_systems.clear();
     d_WSS_in_half_vecs.clear();
@@ -696,9 +692,9 @@ IIMethod::postprocessIntegrateData(double /*current_time*/, double /*new_time*/,
 
 void
 IIMethod::interpolateVelocity(const int u_data_idx,
-                                       const std::vector<Pointer<CoarsenSchedule<NDIM> > >& u_synch_scheds,
-                                       const std::vector<Pointer<RefineSchedule<NDIM> > >& u_ghost_fill_scheds,
-                                       const double data_time)
+                              const std::vector<Pointer<CoarsenSchedule<NDIM> > >& u_synch_scheds,
+                              const std::vector<Pointer<RefineSchedule<NDIM> > >& u_ghost_fill_scheds,
+                              const double data_time)
 {
     const double mu = getINSHierarchyIntegrator()->getStokesSpecifications()->getMu();
     const int finest_ln = d_hierarchy->getFinestLevelNumber();
@@ -868,7 +864,8 @@ IIMethod::interpolateVelocity(const int u_data_idx,
         VectorValue<double> U, WSS_in, WSS_out, U_n, U_t, n;
         std::array<VectorValue<double>, 2> dx_dxi;
 
-        Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getFinestPatchLevelNumber());
+        Pointer<PatchLevel<NDIM> > level =
+            d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getFinestPatchLevelNumber());
         int local_patch_num = 0;
         for (PatchLevel<NDIM>::Iterator p(level); p; p++, ++local_patch_num)
         {
@@ -1257,17 +1254,22 @@ IIMethod::interpolateVelocity(const int u_data_idx,
                             U_qp[NDIM * local_indices[k] + axis] = U_axis[local_indices[k]];
                             if (dh != 0.0)
                             {
-								WSS_in_qp[NDIM * local_indices[k] + axis] =
+                                WSS_in_qp[NDIM * local_indices[k] + axis] =
                                     mu * (1.0 / dh) *
                                     (U_in_qp[NDIM * local_indices[k] + axis] - U_qp[NDIM * local_indices[k] + axis]);
 
-								double du_dn_jump = 0.0;
-								for (int dd = 0; dd < NDIM; ++dd)
-								{
-									du_dn_jump += DU_jump_qp[axis][NDIM * local_indices[k]  + dd] * n_qp[NDIM * local_indices[k] + dd];
-								}
-								WSS_out_qp[NDIM * local_indices[k] + axis] = (1.0 - d_exterior_calc_coef) * (du_dn_jump - WSS_in_qp[NDIM * local_indices[k] + axis])
-												  + d_exterior_calc_coef * mu * (1.0 / dh) * (U_out_qp[NDIM * local_indices[k] + axis] - U_qp[NDIM * local_indices[k] + axis]);
+                                double du_dn_jump = 0.0;
+                                for (int dd = 0; dd < NDIM; ++dd)
+                                {
+                                    du_dn_jump += DU_jump_qp[axis][NDIM * local_indices[k] + dd] *
+                                                  n_qp[NDIM * local_indices[k] + dd];
+                                }
+                                WSS_out_qp[NDIM * local_indices[k] + axis] =
+                                    (1.0 - d_exterior_calc_coef) *
+                                        (du_dn_jump - WSS_in_qp[NDIM * local_indices[k] + axis]) +
+                                    d_exterior_calc_coef * mu * (1.0 / dh) *
+                                        (U_out_qp[NDIM * local_indices[k] + axis] -
+                                         U_qp[NDIM * local_indices[k] + axis]);
                             }
                             else
                             {
@@ -1402,7 +1404,7 @@ IIMethod::interpolateVelocity(const int u_data_idx,
         // Solve for the nodal values.
         d_fe_data_managers[part]->computeL2Projection(
             *U_vec, *U_rhs_vec, VELOCITY_SYSTEM_NAME, d_default_interp_spec.use_consistent_mass_matrix);
-         U_vec->close();
+        U_vec->close();
         d_fe_data_managers[part]->computeL2Projection(
             *U_n_vec, *U_n_rhs_vec, VELOCITY_SYSTEM_NAME, d_default_interp_spec.use_consistent_mass_matrix);
         U_n_vec->close();
@@ -1507,8 +1509,6 @@ IIMethod::computeFluidTraction(const double data_time, unsigned int part)
         *d_fe_data_managers[part]->getDofMapCache(PRESSURE_OUT_SYSTEM_NAME);
     FEType P_out_fe_type = P_out_dof_map.variable_type(0);
 
-
-
     System& WSS_in_system = equation_systems->get_system(WSS_IN_SYSTEM_NAME);
     const DofMap& WSS_in_dof_map = WSS_in_system.get_dof_map();
     FEDataManager::SystemDofMapCache& WSS_in_dof_map_cache =
@@ -1583,7 +1583,8 @@ IIMethod::computeFluidTraction(const double data_time, unsigned int part)
     std::array<VectorValue<double>, 2> dX_dxi, dx_dxi;
     VectorValue<double> n, N, x, X;
 
-    Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getFinestPatchLevelNumber());
+    Pointer<PatchLevel<NDIM> > level =
+        d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getFinestPatchLevelNumber());
     const Pointer<CartesianGridGeometry<NDIM> > grid_geom = level->getGridGeometry();
     int local_patch_num = 0;
     for (PatchLevel<NDIM>::Iterator p(level); p; p++, ++local_patch_num)
@@ -1837,11 +1838,11 @@ IIMethod::computeFluidTraction(const double data_time, unsigned int part)
 
     d_fe_data_managers[part]->computeL2Projection(
         *TAU_in_vec, *TAU_in_rhs_vec, TAU_IN_SYSTEM_NAME, d_default_interp_spec.use_consistent_mass_matrix);
-	TAU_in_vec->close();
+    TAU_in_vec->close();
 
     d_fe_data_managers[part]->computeL2Projection(
         *TAU_out_vec, *TAU_out_rhs_vec, TAU_OUT_SYSTEM_NAME, d_default_interp_spec.use_consistent_mass_matrix);
-	TAU_out_vec->close();
+    TAU_out_vec->close();
 
     d_X_half_vecs[part]->close();
     d_X_current_vecs[part]->close();
@@ -1870,7 +1871,9 @@ void
 IIMethod::extrapolatePressureForTraction(const int p_data_idx, const double data_time, unsigned int part)
 {
     batch_vec_ghost_update(
-        { d_P_out_half_vecs[part], d_P_jump_half_vecs[part], d_P_in_half_vecs[part], d_X_new_vecs[part] }, INSERT_VALUES, SCATTER_FORWARD);
+        { d_P_out_half_vecs[part], d_P_jump_half_vecs[part], d_P_in_half_vecs[part], d_X_new_vecs[part] },
+        INSERT_VALUES,
+        SCATTER_FORWARD);
 
     Pointer<PatchHierarchy<NDIM> > patch_hierarchy = d_fe_data_managers[part]->getPatchHierarchy();
 
@@ -1952,7 +1955,8 @@ IIMethod::extrapolatePressureForTraction(const int p_data_idx, const double data
     std::vector<double> P_i_qp, P_o_qp, P_in_qp, P_out_qp, P_jump_qp, N_qp;
     std::array<VectorValue<double>, 2> dx_dxi;
 
-    Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getFinestPatchLevelNumber());
+    Pointer<PatchLevel<NDIM> > level =
+        d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getFinestPatchLevelNumber());
     const Pointer<CartesianGridGeometry<NDIM> > grid_geom = level->getGridGeometry();
     VectorValue<double> tau1, tau2, n;
     X_ghost_vec->close();
@@ -2167,7 +2171,9 @@ IIMethod::extrapolatePressureForTraction(const int p_data_idx, const double data
         {
             for (unsigned int k = 0; k < nindices; ++k)
             {
-				P_out_qp[local_indices[k]] = (1.0 - d_exterior_calc_coef) * (P_jump_qp[local_indices[k]] + P_i_qp[local_indices[k]]) + d_exterior_calc_coef * P_o_qp[local_indices[k]];
+                P_out_qp[local_indices[k]] =
+                    (1.0 - d_exterior_calc_coef) * (P_jump_qp[local_indices[k]] + P_i_qp[local_indices[k]]) +
+                    d_exterior_calc_coef * P_o_qp[local_indices[k]];
                 P_in_qp[local_indices[k]] = P_i_qp[local_indices[k]];
             }
         }
@@ -2228,11 +2234,11 @@ IIMethod::extrapolatePressureForTraction(const int p_data_idx, const double data
 
     d_fe_data_managers[part]->computeL2Projection(
         *P_in_vec, *P_in_rhs_vec, PRESSURE_IN_SYSTEM_NAME, d_default_interp_spec.use_consistent_mass_matrix);
-	P_in_vec->close();
+    P_in_vec->close();
 
     d_fe_data_managers[part]->computeL2Projection(
         *P_out_vec, *P_out_rhs_vec, PRESSURE_OUT_SYSTEM_NAME, d_default_interp_spec.use_consistent_mass_matrix);
-	P_out_vec->close();
+    P_out_vec->close();
 
     d_X_half_vecs[part]->close();
     d_X_current_vecs[part]->close();
@@ -2246,7 +2252,6 @@ IIMethod::extrapolatePressureForTraction(const int p_data_idx, const double data
     return;
 
 } // extrapolatePressureForTraction
-
 
 void
 IIMethod::calculateInterfacialFluidForces(const int p_data_idx, double data_time)
@@ -2275,7 +2280,6 @@ IIMethod::calculateInterfacialFluidForces(const int p_data_idx, double data_time
 
 } // calculateInterfacialFluidForces
 
-
 void
 IIMethod::forwardEulerStep(const double current_time, const double new_time)
 {
@@ -2293,9 +2297,8 @@ IIMethod::forwardEulerStep(const double current_time, const double new_time)
             ierr =
                 VecWAXPY(d_X_new_vecs[part]->vec(), dt, d_U_t_current_vecs[part]->vec(), d_X_current_vecs[part]->vec());
             IBTK_CHKERRQ(ierr);
-
-		}
-		else
+        }
+        else
         {
             ierr =
                 VecWAXPY(d_X_new_vecs[part]->vec(), dt, d_U_current_vecs[part]->vec(), d_X_current_vecs[part]->vec());
@@ -2324,9 +2327,9 @@ IIMethod::midpointStep(const double current_time, const double new_time)
         }
         else if (d_use_tangential_velocity[part])
         {
-			ierr = VecWAXPY(d_X_new_vecs[part]->vec(), dt, d_U_t_half_vecs[part]->vec(), d_X_current_vecs[part]->vec());
+            ierr = VecWAXPY(d_X_new_vecs[part]->vec(), dt, d_U_t_half_vecs[part]->vec(), d_X_current_vecs[part]->vec());
             IBTK_CHKERRQ(ierr);
-		}
+        }
         else
         {
             ierr = VecWAXPY(d_X_new_vecs[part]->vec(), dt, d_U_half_vecs[part]->vec(), d_X_current_vecs[part]->vec());
@@ -2355,13 +2358,13 @@ IIMethod::trapezoidalStep(const double current_time, const double new_time)
         }
         else if (d_use_tangential_velocity[part])
         {
-		    ierr = VecWAXPY(
+            ierr = VecWAXPY(
                 d_X_new_vecs[part]->vec(), 0.5 * dt, d_U_t_current_vecs[part]->vec(), d_X_current_vecs[part]->vec());
             IBTK_CHKERRQ(ierr);
             ierr = VecAXPY(d_X_new_vecs[part]->vec(), 0.5 * dt, d_U_t_new_vecs[part]->vec());
             IBTK_CHKERRQ(ierr);
-		}
-		else
+        }
+        else
         {
             ierr = VecWAXPY(
                 d_X_new_vecs[part]->vec(), 0.5 * dt, d_U_current_vecs[part]->vec(), d_X_current_vecs[part]->vec());
@@ -2768,34 +2771,34 @@ IIMethod::computeLagrangianForce(const double data_time)
 
 void
 IIMethod::spreadForce(const int f_data_idx,
-                               RobinPhysBdryPatchStrategy* f_phys_bdry_op,
-                               const std::vector<Pointer<RefineSchedule<NDIM> > >& /*f_prolongation_scheds*/,
-                               const double data_time)
+                      RobinPhysBdryPatchStrategy* f_phys_bdry_op,
+                      const std::vector<Pointer<RefineSchedule<NDIM> > >& /*f_prolongation_scheds*/,
+                      const double data_time)
 {
-     TBOX_ASSERT(MathUtilities<double>::equalEps(data_time, d_half_time));
+    TBOX_ASSERT(MathUtilities<double>::equalEps(data_time, d_half_time));
 
-
-    std::vector<std::vector<libMesh::PetscVector<double>*> > vec_collection_update = {d_X_IB_ghost_vecs, d_X_half_vecs, d_F_IB_ghost_vecs, d_F_half_vecs};
+    std::vector<std::vector<libMesh::PetscVector<double>*> > vec_collection_update = {
+        d_X_IB_ghost_vecs, d_X_half_vecs, d_F_IB_ghost_vecs, d_F_half_vecs
+    };
 
     if (d_use_pressure_jump_conditions)
     {
         vec_collection_update.push_back(d_P_jump_IB_ghost_vecs);
         vec_collection_update.push_back(d_P_jump_half_vecs);
-     }
+    }
 
     if (d_use_velocity_jump_conditions)
     {
-		    for (unsigned part = 0; part < d_num_parts; ++part)
-			{
-				for (unsigned int d = 0; d < NDIM; ++d)
-				{
-					vec_collection_update.push_back({d_DU_jump_half_vecs[part][d], d_DU_jump_IB_ghost_vecs[part][d]});
-				}
-			}
+        for (unsigned part = 0; part < d_num_parts; ++part)
+        {
+            for (unsigned int d = 0; d < NDIM; ++d)
+            {
+                vec_collection_update.push_back({ d_DU_jump_half_vecs[part][d], d_DU_jump_IB_ghost_vecs[part][d] });
+            }
+        }
     }
 
     batch_vec_ghost_update(vec_collection_update, INSERT_VALUES, SCATTER_FORWARD);
-
 
     for (unsigned int part = 0; part < d_num_parts; ++part)
     {
@@ -2894,9 +2897,8 @@ IIMethod::initializeFEEquationSystems()
         // Create FE equation systems objects and corresponding variables.
         d_equation_systems[part] = new EquationSystems(*d_meshes[part]);
         EquationSystems* equation_systems = d_equation_systems[part];
-        auto fe_data = std::make_shared<FEData>(d_object_name + "::FEdata::" + std::to_string(part),
-                                                *equation_systems,
-                                                d_registered_for_restart);
+        auto fe_data = std::make_shared<FEData>(
+            d_object_name + "::FEdata::" + std::to_string(part), *equation_systems, d_registered_for_restart);
 
         // Create FE data managers.
         const std::string manager_name = "IIMethod FEDataManager::" + std::to_string(part);
@@ -2968,16 +2970,16 @@ IIMethod::initializeFEEquationSystems()
                 System& P_out_system = equation_systems->add_system<System>(PRESSURE_OUT_SYSTEM_NAME);
                 if (d_use_discon_elem_for_jumps[part])
                 {
-					P_jump_system.add_variable("P_jump_", d_fe_order[part], d_pressure_jump_fe_family);
-					P_in_system.add_variable("P_in_", d_fe_order[part], d_pressure_jump_fe_family);
-					P_out_system.add_variable("P_out_", d_fe_order[part], d_pressure_jump_fe_family);
-				}
-				else
-				{
-					P_jump_system.add_variable("P_jump_", d_fe_order[part], d_fe_family[part]);
-					P_in_system.add_variable("P_in_", d_fe_order[part], d_fe_family[part]);
-					P_out_system.add_variable("P_out_", d_fe_order[part], d_fe_family[part]);
-				}
+                    P_jump_system.add_variable("P_jump_", d_fe_order[part], d_pressure_jump_fe_family);
+                    P_in_system.add_variable("P_in_", d_fe_order[part], d_pressure_jump_fe_family);
+                    P_out_system.add_variable("P_out_", d_fe_order[part], d_pressure_jump_fe_family);
+                }
+                else
+                {
+                    P_jump_system.add_variable("P_jump_", d_fe_order[part], d_fe_family[part]);
+                    P_in_system.add_variable("P_in_", d_fe_order[part], d_fe_family[part]);
+                    P_out_system.add_variable("P_out_", d_fe_order[part], d_fe_family[part]);
+                }
             }
 
             if (d_use_velocity_jump_conditions)
@@ -2991,13 +2993,12 @@ IIMethod::initializeFEEquationSystems()
                         const std::string system_name = "DU_jump_" + std::to_string(d) + "_" + std::to_string(i);
                         if (d_use_discon_elem_for_jumps[part])
                         {
-							DU_jump_system[d]->add_variable(system_name, d_fe_order[part], d_velocity_jump_fe_family);
-						}
-						else
-						{
-							DU_jump_system[d]->add_variable(system_name, d_fe_order[part], d_fe_family[part]);
-						}
-
+                            DU_jump_system[d]->add_variable(system_name, d_fe_order[part], d_velocity_jump_fe_family);
+                        }
+                        else
+                        {
+                            DU_jump_system[d]->add_variable(system_name, d_fe_order[part], d_fe_family[part]);
+                        }
                     }
                 }
 
@@ -3007,12 +3008,12 @@ IIMethod::initializeFEEquationSystems()
                     const std::string system_name = "WSS_in_" + std::to_string(d);
                     if (d_use_discon_elem_for_jumps[part])
                     {
-						WSS_in_system.add_variable(system_name, d_fe_order[part], d_wss_fe_family);
-					}
-					else
-					{
-						WSS_in_system.add_variable(system_name, d_fe_order[part], d_fe_family[part]);
-					}
+                        WSS_in_system.add_variable(system_name, d_fe_order[part], d_wss_fe_family);
+                    }
+                    else
+                    {
+                        WSS_in_system.add_variable(system_name, d_fe_order[part], d_fe_family[part]);
+                    }
                 }
 
                 System& WSS_out_system = equation_systems->add_system<System>(WSS_OUT_SYSTEM_NAME);
@@ -3021,12 +3022,12 @@ IIMethod::initializeFEEquationSystems()
                     const std::string system_name = "WSS_out_" + std::to_string(d);
                     if (d_use_discon_elem_for_jumps[part])
                     {
-						WSS_out_system.add_variable(system_name, d_fe_order[part], d_wss_fe_family);
-					}
-					else
-					{
-						WSS_out_system.add_variable(system_name, d_fe_order[part], d_fe_family[part]);
-					}
+                        WSS_out_system.add_variable(system_name, d_fe_order[part], d_wss_fe_family);
+                    }
+                    else
+                    {
+                        WSS_out_system.add_variable(system_name, d_fe_order[part], d_fe_family[part]);
+                    }
                 }
             }
 
@@ -3038,12 +3039,12 @@ IIMethod::initializeFEEquationSystems()
                     std::string system_name = "TAU_IN_" + std::to_string(d);
                     if (d_use_discon_elem_for_jumps[part])
                     {
-						TAU_in_system.add_variable(system_name, d_fe_order[part], d_tau_fe_family);
-					}
-					else
-					{
-						TAU_in_system.add_variable(system_name, d_fe_order[part], d_fe_family[part]);
-					}
+                        TAU_in_system.add_variable(system_name, d_fe_order[part], d_tau_fe_family);
+                    }
+                    else
+                    {
+                        TAU_in_system.add_variable(system_name, d_fe_order[part], d_fe_family[part]);
+                    }
                 }
 
                 auto& TAU_out_system = equation_systems->add_system<System>(TAU_OUT_SYSTEM_NAME);
@@ -3052,12 +3053,12 @@ IIMethod::initializeFEEquationSystems()
                     std::string system_name = "TAU_OUT_" + std::to_string(d);
                     if (d_use_discon_elem_for_jumps[part])
                     {
-						TAU_out_system.add_variable(system_name, d_fe_order[part], d_tau_fe_family);
-					}
-					else
-					{
-						TAU_out_system.add_variable(system_name, d_fe_order[part], d_fe_family[part]);
-					}
+                        TAU_out_system.add_variable(system_name, d_fe_order[part], d_tau_fe_family);
+                    }
+                    else
+                    {
+                        TAU_out_system.add_variable(system_name, d_fe_order[part], d_fe_family[part]);
+                    }
                 }
             }
 
@@ -3208,13 +3209,13 @@ IIMethod::registerEulerianVariables()
 
 void
 IIMethod::initializePatchHierarchy(Pointer<PatchHierarchy<NDIM> > hierarchy,
-                                            Pointer<GriddingAlgorithm<NDIM> > gridding_alg,
-                                            int /*u_data_idx*/,
-                                            const std::vector<Pointer<CoarsenSchedule<NDIM> > >& /*u_synch_scheds*/,
-                                            const std::vector<Pointer<RefineSchedule<NDIM> > >& /*u_ghost_fill_scheds*/,
-                                            int /*integrator_step*/,
-                                            double /*init_data_time*/,
-                                            bool /*initial_time*/)
+                                   Pointer<GriddingAlgorithm<NDIM> > gridding_alg,
+                                   int /*u_data_idx*/,
+                                   const std::vector<Pointer<CoarsenSchedule<NDIM> > >& /*u_synch_scheds*/,
+                                   const std::vector<Pointer<RefineSchedule<NDIM> > >& /*u_ghost_fill_scheds*/,
+                                   int /*integrator_step*/,
+                                   double /*init_data_time*/,
+                                   bool /*initial_time*/)
 {
     // Cache pointers to the patch hierarchy and gridding algorithm.
     d_hierarchy = hierarchy;
@@ -3226,7 +3227,8 @@ IIMethod::initializePatchHierarchy(Pointer<PatchHierarchy<NDIM> > hierarchy,
         d_fe_data_managers[part]->reinitElementMappings();
     }
     d_eulerian_data_cache->setPatchHierarchy(hierarchy);
-    d_eulerian_data_cache->resetLevels(0, hierarchy->getFinestLevelNumber()); // TODO: implement this->getFinestPatchLevelNumber()
+    d_eulerian_data_cache->resetLevels(0, hierarchy->getFinestLevelNumber()); // TODO: implement
+                                                                              // this->getFinestPatchLevelNumber()
 
     d_is_initialized = true;
     return;
@@ -3254,14 +3256,14 @@ IIMethod::addWorkloadEstimate(Pointer<PatchHierarchy<NDIM> > hierarchy, const in
 } // addWorkloadEstimate
 
 void IIMethod::beginDataRedistribution(Pointer<PatchHierarchy<NDIM> > /*hierarchy*/,
-                                                Pointer<GriddingAlgorithm<NDIM> > /*gridding_alg*/)
+                                       Pointer<GriddingAlgorithm<NDIM> > /*gridding_alg*/)
 {
     // intentionally blank
     return;
 } // beginDataRedistribution
 
 void IIMethod::endDataRedistribution(Pointer<PatchHierarchy<NDIM> > /*hierarchy*/,
-                                              Pointer<GriddingAlgorithm<NDIM> > /*gridding_alg*/)
+                                     Pointer<GriddingAlgorithm<NDIM> > /*gridding_alg*/)
 {
     if (d_is_initialized)
     {
@@ -3275,12 +3277,12 @@ void IIMethod::endDataRedistribution(Pointer<PatchHierarchy<NDIM> > /*hierarchy*
 
 void
 IIMethod::initializeLevelData(Pointer<BasePatchHierarchy<NDIM> > hierarchy,
-                                       int /*level_number*/,
-                                       double /*init_data_time*/,
-                                       bool /*can_be_refined*/,
-                                       bool /*initial_time*/,
-                                       Pointer<BasePatchLevel<NDIM> > /*old_level*/,
-                                       bool /*allocate_data*/)
+                              int /*level_number*/,
+                              double /*init_data_time*/,
+                              bool /*can_be_refined*/,
+                              bool /*initial_time*/,
+                              Pointer<BasePatchLevel<NDIM> > /*old_level*/,
+                              bool /*allocate_data*/)
 {
     for (unsigned int part = 0; part < d_num_parts; ++part)
     {
@@ -3291,8 +3293,8 @@ IIMethod::initializeLevelData(Pointer<BasePatchHierarchy<NDIM> > hierarchy,
 
 void
 IIMethod::resetHierarchyConfiguration(Pointer<BasePatchHierarchy<NDIM> > hierarchy,
-                                               int /*coarsest_level*/,
-                                               int /*finest_level*/)
+                                      int /*coarsest_level*/,
+                                      int /*finest_level*/)
 {
     // const int finest_hier_level = hierarchy->getFinestLevelNumber();
     for (unsigned int part = 0; part < d_num_parts; ++part)
@@ -3304,11 +3306,11 @@ IIMethod::resetHierarchyConfiguration(Pointer<BasePatchHierarchy<NDIM> > hierarc
 
 void
 IIMethod::applyGradientDetector(Pointer<BasePatchHierarchy<NDIM> > base_hierarchy,
-                                         int level_number,
-                                         double error_data_time,
-                                         int tag_index,
-                                         bool initial_time,
-                                         bool uses_richardson_extrapolation_too)
+                                int level_number,
+                                double error_data_time,
+                                int tag_index,
+                                bool initial_time,
+                                bool uses_richardson_extrapolation_too)
 {
     Pointer<PatchHierarchy<NDIM> > hierarchy = base_hierarchy;
     TBOX_ASSERT(hierarchy);
@@ -3372,11 +3374,11 @@ struct IndexOrder
 
 void
 IIMethod::imposeJumpConditions(const int f_data_idx,
-                                        PetscVector<double>& P_jump_ghost_vec,
-                                        std::array<PetscVector<double>*, NDIM>& DU_jump_ghost_vec,
-                                        PetscVector<double>& X_ghost_vec,
-                                        const double /*data_time*/,
-                                        const unsigned int part)
+                               PetscVector<double>& P_jump_ghost_vec,
+                               std::array<PetscVector<double>*, NDIM>& DU_jump_ghost_vec,
+                               PetscVector<double>& X_ghost_vec,
+                               const double /*data_time*/,
+                               const unsigned int part)
 {
     // Extract the mesh.
     EquationSystems* equation_systems = d_fe_data_managers[part]->getEquationSystems();
@@ -3604,7 +3606,7 @@ IIMethod::imposeJumpConditions(const int f_data_idx,
                         {
                             rs[l](d) =
                                 (d == axis ? 0.0 :
-                                             d == SideDim[axis][l] ?
+                                 d == SideDim[axis][l] ?
                                              x_lower[d] + dx[d] * (static_cast<double>(i_c(d) - patch_lower[d])) :
                                              x_lower[d] + dx[d] * (static_cast<double>(i_c(d) - patch_lower[d]) + 0.5));
                         }
@@ -3995,15 +3997,15 @@ IIMethod::imposeJumpConditions(const int f_data_idx,
 
 bool
 IIMethod::checkDoubleCountingIntersection(const int axis,
-                                                   const double* const dx,
-                                                   const libMesh::VectorValue<double>& n,
-                                                   const libMesh::Point& x,
-                                                   const libMesh::Point& xi,
-                                                   const SideIndex<NDIM>& i_s,
-                                                   const SideIndex<NDIM>& i_s_prime,
-                                                   const std::vector<libMesh::Point>& candidate_coords,
-                                                   const std::vector<libMesh::Point>& candidate_ref_coords,
-                                                   const std::vector<libMesh::VectorValue<double> >& candidate_normals)
+                                          const double* const dx,
+                                          const libMesh::VectorValue<double>& n,
+                                          const libMesh::Point& x,
+                                          const libMesh::Point& xi,
+                                          const SideIndex<NDIM>& i_s,
+                                          const SideIndex<NDIM>& i_s_prime,
+                                          const std::vector<libMesh::Point>& candidate_coords,
+                                          const std::vector<libMesh::Point>& candidate_ref_coords,
+                                          const std::vector<libMesh::VectorValue<double> >& candidate_normals)
 {
     bool found_same_intersection_point = false;
     std::vector<libMesh::Point>::const_iterator x_prime_it = candidate_coords.begin();
@@ -4156,12 +4158,12 @@ IIMethod::initializeVelocity(const unsigned int part)
 
 void
 IIMethod::commonConstructor(const std::string& object_name,
-                                     Pointer<Database> input_db,
-                                     const std::vector<libMesh::MeshBase*>& meshes,
-                                     int max_level_number,
-                                     bool register_for_restart,
-                                     const std::string& restart_read_dirname,
-                                     unsigned int restart_restore_number)
+                            Pointer<Database> input_db,
+                            const std::vector<libMesh::MeshBase*>& meshes,
+                            int max_level_number,
+                            bool register_for_restart,
+                            const std::string& restart_read_dirname,
+                            unsigned int restart_restore_number)
 {
     // Set the object name and register it with the restart manager.
     d_object_name = object_name;
@@ -4366,7 +4368,7 @@ IIMethod::getFromInput(Pointer<Database> db, bool /*is_from_restart*/)
     }
     if (d_use_pressure_jump_conditions && d_use_velocity_jump_conditions)
     {
-		if (db->isDouble("wss_calc_width")) d_wss_calc_width = db->getDouble("wss_calc_width");
+        if (db->isDouble("wss_calc_width")) d_wss_calc_width = db->getDouble("wss_calc_width");
         if (db->isString("tau_fe_family"))
             d_tau_fe_family = Utility::string_to_enum<FEFamily>(db->getString("tau_fe_family"));
     }
