@@ -693,6 +693,7 @@ FEDataManager::reinitElementMappings()
 
         // send everything to rank 0 instead of doing an all-to-all:
         IBTK_MPI::allToOneSumReduction(node_ranks.data(), node_ranks.size());
+#if 0
         if (rank == 0)
         {
             const std::string message =
@@ -726,6 +727,7 @@ FEDataManager::reinitElementMappings()
                 }
             }
         }
+#endif
     }
 
     IBTK_TIMER_STOP(t_reinit_element_mappings);
