@@ -13,8 +13,6 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-#include <IBTK_config.h>
-
 #include "ibamr/IIMethod.h"
 #include "ibamr/INSHierarchyIntegrator.h"
 #include "ibamr/ibamr_utilities.h"
@@ -310,7 +308,7 @@ IIMethod::setupTagBuffer(Array<int>& tag_buffer, Pointer<GriddingAlgorithm<NDIM>
     for (unsigned int part = 0; part < d_num_parts; ++part)
     {
         const int gcw = d_fe_data_managers[part]->getGhostCellWidth().max();
-        const int tag_ln = d_fe_data_managers[part]->getLevelNumber() - 1;
+        const int tag_ln = d_fe_data_managers[part]->getFinestPatchLevelNumber() - 1;
         if (tag_ln >= 0 && tag_ln < finest_hier_ln)
         {
             tag_buffer[tag_ln] = std::max(tag_buffer[tag_ln], gcw);
@@ -870,7 +868,7 @@ IIMethod::interpolateVelocity(const int u_data_idx,
         VectorValue<double> U, WSS_in, WSS_out, U_n, U_t, n;
         std::array<VectorValue<double>, 2> dx_dxi;
 
-        Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getLevelNumber());
+        Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getFinestPatchLevelNumber());
         int local_patch_num = 0;
         for (PatchLevel<NDIM>::Iterator p(level); p; p++, ++local_patch_num)
         {
@@ -1585,7 +1583,7 @@ IIMethod::computeFluidTraction(const double data_time, unsigned int part)
     std::array<VectorValue<double>, 2> dX_dxi, dx_dxi;
     VectorValue<double> n, N, x, X;
 
-    Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getLevelNumber());
+    Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getFinestPatchLevelNumber());
     const Pointer<CartesianGridGeometry<NDIM> > grid_geom = level->getGridGeometry();
     int local_patch_num = 0;
     for (PatchLevel<NDIM>::Iterator p(level); p; p++, ++local_patch_num)
@@ -1641,6 +1639,7 @@ IIMethod::computeFluidTraction(const double data_time, unsigned int part)
         // Loop over the elements and compute the positions of the quadrature points.
         qrule.reset();
         unsigned int qp_offset = 0;
+        std::vector<libMesh::dof_id_type> dof_id_scratch;
         for (unsigned int e_idx = 0; e_idx < num_active_patch_elems; ++e_idx)
         {
             Elem* const elem = patch_elems[e_idx];
@@ -1652,8 +1651,10 @@ IIMethod::computeFluidTraction(const double data_time, unsigned int part)
             get_values_for_interpolation(x_node, *X_petsc_vec, X_local_soln, X_dof_indices);
             get_values_for_interpolation(WSS_in_node, *WSS_in_ghost_vec, WSS_in_dof_indices);
             get_values_for_interpolation(WSS_out_node, *WSS_out_ghost_vec, WSS_out_dof_indices);
-            get_values_for_interpolation(P_in_node, *P_in_ghost_vec, P_in_dof_indices[0]);
-            get_values_for_interpolation(P_out_node, *P_out_ghost_vec, P_out_dof_indices[0]);
+            copy_dof_ids_to_vector(0, P_in_dof_indices, dof_id_scratch);
+            get_values_for_interpolation(P_in_node, *P_in_ghost_vec, dof_id_scratch);
+            copy_dof_ids_to_vector(0, P_out_dof_indices, dof_id_scratch);
+            get_values_for_interpolation(P_out_node, *P_out_ghost_vec, dof_id_scratch);
             get_values_for_interpolation(X_node, *X0_vec, X_dof_indices);
 
             const bool qrule_changed =
@@ -1777,6 +1778,8 @@ IIMethod::computeFluidTraction(const double data_time, unsigned int part)
         // Loop over the elements and accumulate the right-hand-side values.
         qrule.reset();
         qp_offset = 0;
+        std::vector<libMesh::dof_id_type> dof_id_in_scratch;
+        std::vector<libMesh::dof_id_type> dof_id_out_scratch;
         for (unsigned int e_idx = 0; e_idx < num_active_patch_elems; ++e_idx)
         {
             Elem* const elem = patch_elems[e_idx];
@@ -1817,11 +1820,11 @@ IIMethod::computeFluidTraction(const double data_time, unsigned int part)
             }
             for (unsigned int d = 0; d < NDIM; ++d)
             {
-                auto dof_id_in_scratch = TAU_in_dof_indices[d];
+                copy_dof_ids_to_vector(d, TAU_in_dof_indices, dof_id_in_scratch);
                 TAU_in_dof_map.constrain_element_vector(TAU_in_rhs_e[d], dof_id_in_scratch);
                 TAU_in_rhs_vec->add_vector(TAU_in_rhs_e[d], dof_id_in_scratch);
 
-                auto dof_id_out_scratch = TAU_out_dof_indices[d];
+                copy_dof_ids_to_vector(d, TAU_out_dof_indices, dof_id_out_scratch);
                 TAU_out_dof_map.constrain_element_vector(TAU_out_rhs_e[d], dof_id_out_scratch);
                 TAU_out_rhs_vec->add_vector(TAU_out_rhs_e[d], dof_id_out_scratch);
             }
@@ -1949,7 +1952,7 @@ IIMethod::extrapolatePressureForTraction(const int p_data_idx, const double data
     std::vector<double> P_i_qp, P_o_qp, P_in_qp, P_out_qp, P_jump_qp, N_qp;
     std::array<VectorValue<double>, 2> dx_dxi;
 
-    Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getLevelNumber());
+    Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(d_fe_data_managers[part]->getFinestPatchLevelNumber());
     const Pointer<CartesianGridGeometry<NDIM> > grid_geom = level->getGridGeometry();
     VectorValue<double> tau1, tau2, n;
     X_ghost_vec->close();
@@ -2705,7 +2708,7 @@ IIMethod::computeLagrangianForce(const double data_time)
             // and add the elemental contributions to the global vector.
             for (unsigned int i = 0; i < NDIM; ++i)
             {
-                dof_id_scratch = F_dof_indices[i];
+                copy_dof_ids_to_vector(i, F_dof_indices, dof_id_scratch);
                 F_dof_map.constrain_element_vector(F_rhs_e[i], dof_id_scratch);
                 F_rhs_vec->add_vector(F_rhs_e[i], dof_id_scratch);
                 if (d_use_velocity_jump_conditions)
@@ -2713,7 +2716,7 @@ IIMethod::computeLagrangianForce(const double data_time)
                     const auto& DU_jump_dof_indices = DU_jump_dof_map_cache[i]->dof_indices(elem);
                     for (unsigned int k = 0; k < NDIM; ++k)
                     {
-                        dof_id_scratch = DU_jump_dof_indices[k];
+                        copy_dof_ids_to_vector(k, DU_jump_dof_indices, dof_id_scratch);
                         DU_jump_dof_map[i]->constrain_element_vector(DU_jump_rhs_e[i][k], dof_id_scratch);
                         DU_jump_rhs_vec[i]->add_vector(DU_jump_rhs_e[i][k], dof_id_scratch);
                     }
@@ -2722,7 +2725,7 @@ IIMethod::computeLagrangianForce(const double data_time)
             if (d_use_pressure_jump_conditions)
             {
                 const auto& P_jump_dof_indices = P_jump_dof_map_cache->dof_indices(elem);
-                dof_id_scratch = P_jump_dof_indices[0];
+                copy_dof_ids_to_vector(0, P_jump_dof_indices, dof_id_scratch);
                 P_jump_dof_map->constrain_element_vector(P_jump_rhs_e, dof_id_scratch);
                 P_jump_rhs_vec->add_vector(P_jump_rhs_e, dof_id_scratch);
             }
@@ -2888,20 +2891,27 @@ IIMethod::initializeFEEquationSystems()
     if (!d_eulerian_data_cache) d_eulerian_data_cache.reset(new SAMRAIDataCache());
     for (unsigned int part = 0; part < d_num_parts; ++part)
     {
+        // Create FE equation systems objects and corresponding variables.
+        d_equation_systems[part] = new EquationSystems(*d_meshes[part]);
+        EquationSystems* equation_systems = d_equation_systems[part];
+        auto fe_data = std::make_shared<FEData>(d_object_name + "::FEdata::" + std::to_string(part),
+                                                *equation_systems,
+                                                d_registered_for_restart);
+
         // Create FE data managers.
         const std::string manager_name = "IIMethod FEDataManager::" + std::to_string(part);
-        d_fe_data_managers[part] = FEDataManager::getManager(manager_name,
+        Pointer<InputDatabase> fe_data_manager_db(new InputDatabase(manager_name + "::input_db"));
+
+        d_fe_data_managers[part] = FEDataManager::getManager(fe_data,
+                                                             manager_name,
+                                                             fe_data_manager_db,
+                                                             d_max_level_number + 1,
                                                              d_interp_spec[part],
                                                              d_spread_spec[part],
                                                              d_default_workload_spec,
                                                              min_ghost_width,
                                                              d_eulerian_data_cache);
         d_ghosts = IntVector<NDIM>::max(d_ghosts, d_fe_data_managers[part]->getGhostCellWidth());
-
-        // Create FE equation systems objects and corresponding variables.
-        d_equation_systems[part] = new EquationSystems(*d_meshes[part]);
-        EquationSystems* equation_systems = d_equation_systems[part];
-        d_fe_data_managers[part]->setEquationSystems(equation_systems, d_max_level_number - 1);
         d_fe_data_managers[part]->COORDINATES_SYSTEM_NAME = COORDS_SYSTEM_NAME;
         if (from_restart)
         {
@@ -3228,10 +3238,6 @@ IIMethod::registerLoadBalancer(Pointer<LoadBalancer<NDIM> > load_balancer, int w
     d_load_balancer = load_balancer;
     d_workload_idx = workload_data_idx;
 
-    for (unsigned int part = 0; part < d_num_parts; ++part)
-    {
-        d_fe_data_managers[part]->registerLoadBalancer(load_balancer, workload_data_idx);
-    }
     return;
 } // registerLoadBalancer
 
@@ -3274,11 +3280,9 @@ IIMethod::initializeLevelData(Pointer<BasePatchHierarchy<NDIM> > hierarchy,
                                        Pointer<BasePatchLevel<NDIM> > /*old_level*/,
                                        bool /*allocate_data*/)
 {
-    const int finest_hier_level = hierarchy->getFinestLevelNumber();
     for (unsigned int part = 0; part < d_num_parts; ++part)
     {
         d_fe_data_managers[part]->setPatchHierarchy(hierarchy);
-        d_fe_data_managers[part]->setPatchLevels(0, finest_hier_level);
     }
     return;
 } // initializeLevelData
@@ -3292,7 +3296,6 @@ IIMethod::resetHierarchyConfiguration(Pointer<BasePatchHierarchy<NDIM> > hierarc
     for (unsigned int part = 0; part < d_num_parts; ++part)
     {
         d_fe_data_managers[part]->setPatchHierarchy(hierarchy);
-        d_fe_data_managers[part]->setPatchLevels(0, hierarchy->getFinestLevelNumber());
     }
     return;
 } // resetHierarchyConfiguration
@@ -3428,7 +3431,7 @@ IIMethod::imposeJumpConditions(const int f_data_idx,
     // Loop over the patches to impose jump conditions on the Eulerian grid.
     const std::vector<std::vector<Elem*> >& active_patch_element_map =
         d_fe_data_managers[part]->getActivePatchElementMap();
-    const int level_num = d_fe_data_managers[part]->getLevelNumber();
+    const int level_num = d_fe_data_managers[part]->getFinestPatchLevelNumber();
     boost::multi_array<double, 1> P_jump_node;
     boost::multi_array<double, 2> x_node;
     std::array<boost::multi_array<double, 2>, NDIM> DU_jump_node;
@@ -3483,6 +3486,7 @@ IIMethod::imposeJumpConditions(const int f_data_idx,
             intersectionSide_u_normals;
 
         // Loop over the elements.
+        std::vector<libMesh::dof_id_type> dof_id_scratch;
         for (size_t e_idx = 0; e_idx < num_active_patch_elems; ++e_idx)
         {
             Elem* const elem = patch_elems[e_idx];
@@ -3491,7 +3495,8 @@ IIMethod::imposeJumpConditions(const int f_data_idx,
             if (d_use_pressure_jump_conditions)
             {
                 const auto& P_jump_dof_indices = P_jump_dof_map_cache->dof_indices(elem);
-                get_values_for_interpolation(P_jump_node, P_jump_ghost_vec, P_jump_dof_indices[0]);
+                copy_dof_ids_to_vector(0, P_jump_dof_indices, dof_id_scratch);
+                get_values_for_interpolation(P_jump_node, P_jump_ghost_vec, dof_id_scratch);
             }
             if (d_use_velocity_jump_conditions)
             {

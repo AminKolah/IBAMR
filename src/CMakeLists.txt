@@ -154,6 +154,7 @@ SET(CXX_SRC
   IB/CIBStrategy.cpp
   IB/IBInterpolantHierarchyIntegrator.cpp
   IB/IBFESurfaceMethod.cpp
+  IB/IIMethod.cpp
   IB/IBInstrumentationSpecFactory.cpp
   # This file is not yet finished
   # IB/IBFEPatchRecoveryPostProcessor.cpp
