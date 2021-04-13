@@ -3225,6 +3225,8 @@ IIMethod::initializePatchHierarchy(Pointer<PatchHierarchy<NDIM> > hierarchy,
     {
         d_fe_data_managers[part]->reinitElementMappings();
     }
+    d_eulerian_data_cache->setPatchHierarchy(hierarchy);
+    d_eulerian_data_cache->resetLevels(0, hierarchy->getFinestLevelNumber()); // TODO: implement this->getFinestPatchLevelNumber()
 
     d_is_initialized = true;
     return;
