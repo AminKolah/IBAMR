@@ -232,7 +232,7 @@ IIMethod::registerDisconElemFamilyForJumps(const unsigned int part)
     TBOX_ASSERT(part < d_num_parts);
     d_use_discon_elem_for_jumps[part] = true;
     return;
-} // registerTangentialVelocityMotion
+} // registerDisconElemFamilyForJumps
 
 void
 IIMethod::registerTangentialVelocityMotion(const unsigned int part)
@@ -288,7 +288,7 @@ IIMethod::getSurfaceForceIntegral(const unsigned int part) const
 {
     TBOX_ASSERT(part < d_num_parts);
     return d_lag_surface_force_integral[part];
-}
+} // getSurfaceForceIntegral
 
 const IntVector<NDIM>&
 IIMethod::getMinimumGhostCellWidth() const
@@ -2311,7 +2311,7 @@ IIMethod::forwardEulerStep(const double current_time, const double new_time)
         d_X_half_vecs[part]->close();
     }
     return;
-} // eulerStep
+} // forwardEulerStep
 
 void
 IIMethod::midpointStep(const double current_time, const double new_time)
@@ -2853,13 +2853,13 @@ FEDataManager::InterpSpec
 IIMethod::getDefaultInterpSpec() const
 {
     return d_default_interp_spec;
-}
+} // getDefaultInterpSpec
 
 FEDataManager::SpreadSpec
 IIMethod::getDefaultSpreadSpec() const
 {
     return d_default_spread_spec;
-}
+} // getDefaultSpreadSpec
 
 void
 IIMethod::setInterpSpec(const FEDataManager::InterpSpec& interp_spec, const unsigned int part)
@@ -2868,7 +2868,7 @@ IIMethod::setInterpSpec(const FEDataManager::InterpSpec& interp_spec, const unsi
     TBOX_ASSERT(part < d_num_parts);
     d_interp_spec[part] = interp_spec;
     return;
-}
+} // setInterpSpec
 
 void
 IIMethod::setSpreadSpec(const FEDataManager::SpreadSpec& spread_spec, const unsigned int part)
@@ -2877,7 +2877,7 @@ IIMethod::setSpreadSpec(const FEDataManager::SpreadSpec& spread_spec, const unsi
     TBOX_ASSERT(part < d_num_parts);
     d_spread_spec[part] = spread_spec;
     return;
-}
+} // setSpreadSpec
 
 void
 IIMethod::initializeFEEquationSystems()
@@ -3101,7 +3101,7 @@ IIMethod::initializeFEEquationSystems()
     }
     d_fe_equation_systems_initialized = true;
     return;
-}
+} // initializeFEEquationSystems
 
 void
 IIMethod::initializeFEData()
@@ -3350,7 +3350,7 @@ IIMethod::writeFEDataToRestartFile(const std::string& restart_dump_dirname, unsi
         d_equation_systems[part]->write(file_name, xdr_mode, write_mode, /*partition_agnostic*/ true);
     }
     return;
-}
+} // writeFEDataToRestartFile
 
 /////////////////////////////// PROTECTED ////////////////////////////////////
 
@@ -4043,7 +4043,7 @@ IIMethod::checkDoubleCountingIntersection(const int axis,
         if (found_same_intersection_point) break;
     }
     return found_same_intersection_point;
-}
+} // checkDoubleCountingIntersection
 
 void
 IIMethod::initializeCoordinates(const unsigned int part)
