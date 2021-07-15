@@ -154,7 +154,7 @@ tether_force_function(VectorValue<double>& F,
 void
 tether_force_function(VectorValue<double>& F,
                       const VectorValue<double>& n,
-                      const VectorValue<double>& N,
+                      const VectorValue<double>& /*N*/,
                       const TensorValue<double>& /*FF*/,
                       const libMesh::Point& x,
                       const libMesh::Point& X,
@@ -612,7 +612,6 @@ main(int argc, char* argv[])
     } // cleanup dynamically allocated objects prior to shutdown
 
     SAMRAIManager::shutdown();
-    return true;
 } // main
 
 void
