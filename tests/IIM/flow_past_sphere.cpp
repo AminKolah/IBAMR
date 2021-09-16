@@ -185,8 +185,6 @@ main(int argc, char* argv[])
         const double dx = input_db->getDouble("DX");
         const double mfac = input_db->getDouble("MFAC");
         const double ds = mfac * dx;
-        const double N = input_db->getDouble("N");
-        const double Re = input_db->getDouble("Re");
         const double DT = input_db->getDouble("DT");
         string elem_type = input_db->getString("ELEM_TYPE");
         const double R = 0.5;
@@ -715,7 +713,6 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
     UniquePtr<QBase> qrule = QBase::build(QGAUSS, dim, SEVENTH);
     fe->attach_quadrature_rule(qrule.get());
     const vector<double>& JxW = fe->get_JxW();
-    const vector<libMesh::Point>& q_point = fe->get_xyz();
     const vector<vector<double> >& phi = fe->get_phi();
     const vector<vector<VectorValue<double> > >& dphi = fe->get_dphi();
 
@@ -767,8 +764,7 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
     }
     SAMRAI_MPI::sumReduction(F_integral, NDIM);
     SAMRAI_MPI::sumReduction(T_integral, NDIM);
-    static const double rho = 1.0;
-    static const double U_max = 1.0;
+
     static const double D = 1.0;
     if (SAMRAI_MPI::getRank() == 0)
     {

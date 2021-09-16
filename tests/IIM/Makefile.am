@@ -17,7 +17,7 @@ EXTRA_PROGRAMS =
 
 if LIBMESH_ENABLED
 EXTRA_PROGRAMS += poiseuille_flow hagen_poiseuille_flow \
-Taylor_couette_2d Taylor_couette_3d flow_past_cylinder \
+taylor_couette_2d taylor_couette_3d flow_past_cylinder \
 flow_past_sphere
 endif
 
@@ -35,15 +35,15 @@ endif
 
 
 if LIBMESH_ENABLED
-Taylor_couette_2d_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=2
-Taylor_couette_2d_LDADD = $(IBAMR_LDFLAGS) $(IBAMR2d_LIBS) $(IBAMR_LIBS)
-Taylor_couette_2d_SOURCES = Taylor_couette_2d.cpp
+taylor_couette_2d_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=2
+taylor_couette_2d_LDADD = $(IBAMR_LDFLAGS) $(IBAMR2d_LIBS) $(IBAMR_LIBS)
+taylor_couette_2d_SOURCES = taylor_couette_2d.cpp
 endif
 
 if LIBMESH_ENABLED
-Taylor_couette_3d_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=3
-Taylor_couette_3d_LDADD = $(IBAMR_LDFLAGS) $(IBAMR3d_LIBS) $(IBAMR_LIBS)
-Taylor_couette_3d_SOURCES = Taylor_couette_3d.cpp
+taylor_couette_3d_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=3
+taylor_couette_3d_LDADD = $(IBAMR_LDFLAGS) $(IBAMR3d_LIBS) $(IBAMR_LIBS)
+taylor_couette_3d_SOURCES = taylor_couette_3d.cpp
 endif
 
 if LIBMESH_ENABLED

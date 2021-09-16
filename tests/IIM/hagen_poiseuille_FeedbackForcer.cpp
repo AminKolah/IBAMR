@@ -1,7 +1,7 @@
 // Filename: hagen_poiseuille_FeedbackForcer.cpp
 // Created by IBAMR developers - 2015-2021
 
-#include "FeedbackForcer.h"
+#include "hagen_poiseuille_FeedbackForcer.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -35,7 +35,7 @@ inline double smooth_kernel(const double r)
 
 ////////////////////////////// PUBLIC ///////////////////////////////////////
 
-FeedbackForcer::FeedbackForcer(const double height,
+hagen_poiseuille_FeedbackForcer::hagen_poiseuille_FeedbackForcer(const double height,
                                const double diameter,
                                const INSHierarchyIntegrator* fluid_solver,
                                const Pointer<PatchHierarchy<NDIM> > patch_hierarchy)
@@ -43,20 +43,20 @@ FeedbackForcer::FeedbackForcer(const double height,
 {
     // intentionally blank
     return;
-} // FeedbackForcer
+} // hagen_poiseuille_FeedbackForcer
 
-FeedbackForcer::~FeedbackForcer()
+hagen_poiseuille_FeedbackForcer::~hagen_poiseuille_FeedbackForcer()
 {
     // intentionally blank
     return;
-} // ~FeedbackForcer
+} // ~hagen_poiseuille_FeedbackForcer
 
-bool FeedbackForcer::isTimeDependent() const
+bool hagen_poiseuille_FeedbackForcer::isTimeDependent() const
 {
     return true;
 } // isTimeDependent
 
-void FeedbackForcer::setDataOnPatch(const int data_idx,
+void hagen_poiseuille_FeedbackForcer::setDataOnPatch(const int data_idx,
                                     Pointer<Variable<NDIM> > /*var*/,
                                     Pointer<Patch<NDIM> > patch,
                                     const double /*data_time*/,

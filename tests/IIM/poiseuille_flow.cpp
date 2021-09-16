@@ -72,32 +72,6 @@ namespace ModelData
     static double p_e =  0.0;
     static double MU = 0.0;
     static double Re = 0.0;
-    //~ void tether_body_force_function_thin(
-                                         //~ VectorValue<double>& F,
-                                         //~ const TensorValue<double>& /*FF*/,
-                                         //~ const libMesh::Point& x,
-                                         //~ const libMesh::Point& X,
-                                         //~ Elem* const /*elem*/,
-                                         //~ const vector<const vector<double>*>& var_data,
-                                         //~ const vector<const vector<VectorValue<double> >*>& /*grad_var_data*/,
-                                         //~ double time,
-                                         //~ void* /*ctx*/)
-    //~ {
-		//~ 
-		//~ const std::vector<double>& U = *var_data[0];
-		//~ 
-		//~ 
-//~ 
-		//~ for (unsigned int d = 0; d < NDIM; ++d)
-		//~ {
-			//~ F(d) = kappa_s_thin * (X(d) - x(d)) + eta_s_thin * (0.0 - U[d]);
-		//~ }
-				//~ 
-		//~ 
-				//~ 
-		//~ return;
-    //~ }
-    
     
     
 void tether_body_force_function_thin(VectorValue<double>& F,
@@ -125,7 +99,6 @@ void tether_body_force_function_thin(VectorValue<double>& F,
     // and velocities.
     for (unsigned int d = 0; d < NDIM; ++d)
     {
-        //~ F(d) = kappa_s_thin * (X(d) - x(d)) + eta_s_thin * (0.0 - u_bndry_n) * n(d);
          F(d) =  kappa_s_thin * (X(d) - x(d)) + eta_s_thin * (0.0 - u_bndry_n) * n(d);
     }
     return; 
@@ -217,7 +190,6 @@ int main(int argc, char* argv[])
         const int timer_dump_interval = app_initializer->getTimerDumpInterval();
         
         // Create a hybrid FE mesh.
-        //~ const int cover_on = (input_db->getString("THICK_COVER") == "ON");
         const double dx = input_db->getDouble("DX");
         const double ds = input_db->getDouble("MFAC") * dx;
         MU = input_db->getDouble("MU");
@@ -227,7 +199,6 @@ int main(int argc, char* argv[])
         D = input_db->getDouble("D"); // channel parameter (cm)
         L = input_db->getDouble("L"); // channel length (cm)
         p_e = input_db->getDouble("P_E"); // channel length (cm)
-        const double w = input_db->getDouble("W"); // wall thickness (cm)
         const double H = input_db->getDouble("H"); // Height (cm)
         FFAC = input_db->getDouble("FFAC"); // Height (cm)
         theta = input_db->getDouble("THETA");
@@ -248,9 +219,7 @@ int main(int argc, char* argv[])
         lower_mesh.reserve_nodes (nn + 1);
         lower_mesh.reserve_elem (nn);
 		for (unsigned int i = 0; i <= nn; i++)
-        {     
-			//~ lower_mesh.add_point (libMesh::Point(L*static_cast<Real>(i)/static_cast<Real>(nn), y_position_low, 0.), node_id++);
-			
+        {     			
 			lower_mesh.add_point (libMesh::Point(L*static_cast<Real>(i)/static_cast<Real>(nn), y_position_low + tan(theta)*L*static_cast<Real>(i)/static_cast<Real>(nn), 0.0), node_id++);
 
 		}
@@ -278,7 +247,6 @@ int main(int argc, char* argv[])
 
 		for (unsigned int i = 0; i <= nn; i++)
         {     
-			//~ upper_mesh.add_point (libMesh::Point(L*static_cast<Real>(i)/static_cast<Real>(nn), y_position_up , 0.0), node_id++);
 			upper_mesh.add_point (libMesh::Point(L*static_cast<Real>(i)/static_cast<Real>(nn), y_position_up + tan(theta)*L*static_cast<Real>(i)/static_cast<Real>(nn) , 0.0), node_id++);
 		}
 
@@ -462,18 +430,10 @@ int main(int argc, char* argv[])
         // velocity.
         if (SAMRAI_MPI::getRank() == 0)
         {
-           // drag_stream.open("C_D_2D_IIM_fine.curve", ios_base::out | ios_base::trunc);
-           // lift_stream.open("C_L_2D_IIM_fine.curve", ios_base::out | ios_base::trunc);
-            //~ U_L2_norm_stream.open("U_L2_IIM_UBC_" + std::to_string(dx) +"_Re_" + std::to_string(int(Re)) +".curve", ios_base::out | ios_base::trunc);
-            //~ U_max_norm_stream.open("U_max_IIM_UBC_" + std::to_string(dx) +"_Re_" + std::to_string(int(Re)) +".curve", ios_base::out | ios_base::trunc);
-            
+ 
             p_L2_norm_stream.open("p_L2_II_" + std::to_string(dx) +"_theta_" + std::to_string(double(theta)) +".curve", ios_base::out | ios_base::trunc);
             p_max_norm_stream.open("p_max_II_" + std::to_string(dx) +"_theta_" + std::to_string(double(theta)) +".curve", ios_base::out | ios_base::trunc);
 
-           // drag_stream.precision(10);
-          //  lift_stream.precision(10);
-            //~ U_L2_norm_stream.precision(10);
-            //~ U_max_norm_stream.precision(10);
             
            p_L2_norm_stream.precision(10);
            p_max_norm_stream.precision(10);
@@ -483,10 +443,6 @@ int main(int argc, char* argv[])
 
         double loop_time_end = time_integrator->getEndTime();
         
-
-        double U_res = 100;
-        
-
         
         double dt = 0.0;
         while (!MathUtilities<double>::equalEps(loop_time, loop_time_end) &&
@@ -517,22 +473,11 @@ int main(int argc, char* argv[])
             VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
             Pointer<hier::Variable<NDIM> > u_var = time_integrator->getVelocityVariable();
             Pointer<VariableContext> current_ctx = time_integrator->getCurrentContext();
-            const int u_idx = var_db->mapVariableAndContextToIndex(u_var, current_ctx);
             
             
             const Pointer<hier::Variable<NDIM> > p_var = time_integrator->getPressureVariable();
 			const Pointer<VariableContext> p_ctx = time_integrator->getCurrentContext();
-			const int p_idx = var_db->mapVariableAndContextToIndex(p_var, p_ctx);
-            //~ 
-            //~ 
-            //~ Pointer<VariableContext> new_ctx = time_integrator->getNewContext();
-            //~ const int u_new_idx = var_db->mapVariableAndContextToIndex(u_var, new_ctx);
-            //~ 
-            //~ const int finest_ln = patch_hierarchy->getFinestLevelNumber();
-			//~ HierarchyMathOps hier_math_ops("hier_math_ops", patch_hierarchy);
-			//~ hier_math_ops.resetLevels(finest_ln, finest_ln);
-            
-            
+
             // ************************************************************************//
             // At specified intervals, write visualization and restart files,
             // print out timer data, and store hierarchy data for post
@@ -569,31 +514,21 @@ int main(int argc, char* argv[])
                 pout << "\nWriting timer data...\n\n";
                 TimerManager::getManager()->print(plog);
             }
-			//~ if (dump_viz_data && (iteration_num % viz_dump_interval == 0 || last_step))
-            //~ {
-                pout << "\nWriting state data...\n\n";
-                   //~ output_data(patch_hierarchy, time_integrator, iteration_num, loop_time, postproc_data_dump_dirname);
+            pout << "\nWriting state data...\n\n";
                    
                    
-                                    postprocess_data(patch_hierarchy,
-                                 navier_stokes_integrator,
-                                 lower_mesh,
-                                 lower_equation_systems,
-                                  iteration_num,
-                                 loop_time,
-                                  postproc_data_dump_dirname);
-            //~ }
-            
-                        if (dump_postproc_data &&
+			postprocess_data(patch_hierarchy,
+							 navier_stokes_integrator,
+							 lower_mesh,
+							 lower_equation_systems,
+							  iteration_num,
+							 loop_time,
+							  postproc_data_dump_dirname);
+     
+            if (dump_postproc_data &&
             (iteration_num % postproc_data_dump_interval == 0 || last_step))
             {
-                //~ pout << "\nWriting state data...\n\n";
-                
-                //~ compute_velocity_profile(patch_hierarchy, u_idx, loop_time,
-                                         //~ postproc_data_dump_dirname);
-                //~ compute_pressure_profile(patch_hierarchy, p_idx, loop_time,
-                                         //~ postproc_data_dump_dirname);
-                                         
+
                                          
             }
         }
@@ -722,25 +657,14 @@ void compute_velocity_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
             const Box<NDIM>& patch_box = patch->getBox();
             const CellIndex<NDIM>& patch_lower = patch_box.lower();
             const CellIndex<NDIM>& patch_upper = patch_box.upper();
-            //            const CellIndex<NDIM>& patch_lower_left = patch_box.lower_left();
-            //            const CellIndex<NDIM>& patch_lower_right = patch_box.lower_right();
-            //            const CellIndex<NDIM>& patch_upper_left = patch_box.upper_left();
-            //            const CellIndex<NDIM>& patch_upper_right = patch_box.upper_right();
-            
+
             const Pointer<CartesianPatchGeometry<NDIM> > patch_geom =
             patch->getPatchGeometry();
             const double* const patch_x_lower = patch_geom->getXLower();
             const double* const patch_x_upper = patch_geom->getXUpper();
-            //            const double* const patch_x_lower_left = patch_geom->getXLower_Left();
-            //            const double* const patch_x_lower_right = patch_geom->getXLower_Right();
-            //            const double* const patch_x_upper_left = patch_geom->getXUpper_Left();
-            //            const double* const patch_x_upper_right = patch_geom->getXUpper_Right();
+
             const double* const patch_dx = patch_geom->getDx();
             
-            //~ const bool inside_patch =
-            //~ x_loc >= patch_x_lower[0] && x_loc <= patch_x_upper[0] &&
-            //~ !(patch_x_upper[1] < y_loc_min || patch_x_lower[1] > y_loc_max);
-    
 
             // Entire box containing the required data.
             Box<NDIM> box(IndexUtilities::getCellIndex(&X_min[0], patch_x_lower, patch_x_upper,
@@ -868,7 +792,6 @@ void compute_pressure_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
 
     const double X_min[2] = { 0.1*L , 0.1*L };
     const double X_max[2] = { 0.9*L  ,0.9*L };
-    //vector<double> pos_values;
     double p_Eulerian_L2_norm = 0.0;
     double p_Eulerian_max_norm = 0.0;
     int N_max = 0;
@@ -881,19 +804,11 @@ void compute_pressure_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
             const Box<NDIM>& patch_box = patch->getBox();
             const CellIndex<NDIM>& patch_lower = patch_box.lower();
             const CellIndex<NDIM>& patch_upper = patch_box.upper();
-            //            const CellIndex<NDIM>& patch_lower_left = patch_box.lower_left();
-            //            const CellIndex<NDIM>& patch_lower_right = patch_box.lower_right();
-            //            const CellIndex<NDIM>& patch_upper_left = patch_box.upper_left();
-            //            const CellIndex<NDIM>& patch_upper_right = patch_box.upper_right();
-            
+
             const Pointer<CartesianPatchGeometry<NDIM> > patch_geom =
             patch->getPatchGeometry();
             const double* const patch_x_lower = patch_geom->getXLower();
             const double* const patch_x_upper = patch_geom->getXUpper();
-            //            const double* const patch_x_lower_left = patch_geom->getXLower_Left();
-            //            const double* const patch_x_lower_right = patch_geom->getXLower_Right();
-            //            const double* const patch_x_upper_left = patch_geom->getXUpper_Left();
-            //            const double* const patch_x_upper_right = patch_geom->getXUpper_Right();
             const double* const patch_dx = patch_geom->getDx();
             
 
@@ -1022,7 +937,6 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
     const vector<vector<double> >& phi = fe->get_phi();
     const vector<vector<VectorValue<double> > >& dphi = fe->get_dphi();
     const std::vector<std::vector<double> >& dphi_dxi = fe->get_dphidxi();
-    const std::vector<std::vector<double> >& dphi_deta = fe->get_dphideta();
 
     std::vector<double> U_qp_vec(NDIM);
     std::vector<const std::vector<double>*> var_data(1);
@@ -1069,8 +983,6 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
   
     }
     SAMRAI_MPI::sumReduction(F_integral, NDIM);
-    static const double rho = 1.0;
-    static const double U_max = 1.0;
     static const double D = 1.0;
 
     
@@ -1135,7 +1047,6 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
         for (MeshBase::const_element_iterator el_it = el_begin; el_it != el_end; ++el_it)
         {
             Elem* const elem = *el_it;
-            // fe->reinit(elem);
             for (unsigned int d = 0; d < NDIM; ++d)
             {
 				dof_map.dof_indices(elem, dof_indices[d], d);
@@ -1169,8 +1080,7 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
                 P_i_qp = -(P_j_qp - P_o_qp);
                 
                 double p_ex_qp =(-2.0*p_e*(X_qp(0)/cos(theta) + (X_qp(1)-X1_lower-X_qp(0)*tan(theta))*sin(theta))/(L/cos(theta) + D*tan(theta)) + p_e);
-								  //~ (-2.*p_e*(X0/cos(theta) + (X1-X1_lower-X0*tan(theta))*sin(theta))/(L/cos(theta) + D*tan(theta)) + p_e)
-                //double p_ex_qp = 0.0; 
+
                 interpolate(&tau1(0), qp, X_node, dphi_dxi);
    
                 tau2 = VectorValue<double>(0.0, 0.0, 1.0);
@@ -1185,15 +1095,6 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
 				ex_wss[0] =  -p_e*D* cos(theta)/((L/cos(theta) + D*tan(theta)));
 				ex_wss[1] = -p_e*D* sin(theta)/(L/cos(theta) + D*tan(theta)); 
 				
-				//~ pout << ex_wss[0] << " " <<  WSS_qp(0) <<" "<< ex_wss[1]  <<" "<< WSS_qp(1) <<"\n\n";
-				//~ ex_wss[0] =  -p_e*D* sin(theta)/((L/cos(theta) + D*tan(theta)));
-				//~ ex_wss[1] = -p_e*D* cos(theta)/(L/cos(theta) + D*tan(theta)); 
-				//~ ex_wss[1] = -p_e*D* n(0)/(L/cos(theta) + D*tan(theta)); 
-				//~ ex_wss[0] = p_e*D* n(1)/((L/cos(theta) + D*tan(theta)));
-				
-				//~ pout << N(0) << "   "<< N(1)<<"\n\n";
-				//~ ex_wss[0] = 0.0;
-				//~ ex_wss[1] = 0.0;
 
 				if (x_qp(0)>0.2*L && x_qp(0)<0.8*L)
 				{
@@ -1215,8 +1116,7 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
 				
 			}
 		}
-        // SAMRAI_MPI::sumReduction(&U_L2_norm, 1);
-        // SAMRAI_MPI::maxReduction(&U_max_norm, 1);
+
 		SAMRAI_MPI::sumReduction(&qp_tot, 1);
 		
         SAMRAI_MPI::sumReduction(&WSS_L2_norm, 1);
@@ -1232,10 +1132,10 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
         SAMRAI_MPI::maxReduction(&disp_max_norm, 1);
         
         
-        //~ U_L2_norm = sqrt(U_L2_norm/static_cast<Real>(qp_tot));
-        //~ WSS_L2_norm = sqrt(WSS_L2_norm/static_cast<Real>(qp_tot));
-        //~ P_L2_norm = sqrt(P_L2_norm/static_cast<Real>(qp_tot));
-        //~ disp_L2_norm = sqrt(disp_L2_norm/static_cast<Real>(qp_tot));
+        // U_L2_norm = sqrt(U_L2_norm/static_cast<Real>(qp_tot));
+        // WSS_L2_norm = sqrt(WSS_L2_norm/static_cast<Real>(qp_tot));
+        // P_L2_norm = sqrt(P_L2_norm/static_cast<Real>(qp_tot));
+        // disp_L2_norm = sqrt(disp_L2_norm/static_cast<Real>(qp_tot));
         
         U_L2_norm = sqrt(U_L2_norm);
         WSS_L2_norm = sqrt(WSS_L2_norm);

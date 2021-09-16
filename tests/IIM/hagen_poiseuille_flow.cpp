@@ -54,7 +54,6 @@
 #include <ibamr/StaggeredStokesOpenBoundaryStabilizer.h>
 
 
-static const int FEDIM = 2;
 namespace ModelData
 {
 // Elasticity model data for thin body.
@@ -100,7 +99,6 @@ void tether_body_force_function_thin(VectorValue<double>& F,
     // and velocities.
     for (unsigned int d = 0; d < NDIM; ++d)
     {
-       // F(d) = x_kappa_n * n(d) - eta_s_thin * (U[d] - u_bndry_n * n(d));
        F(d) = kappa_s_thin * (X(d) - x(d)) - eta_s_thin * (U[d] - u_bndry_n * n(d));
     }
     return; 
@@ -227,7 +225,6 @@ int main(int argc, char* argv[])
         MU = input_db->getDouble("MU");
         theta = input_db->getDouble("THETA");
         p_e = input_db->getDouble("P_E");
-        const double Re  = input_db->getDouble("Re");
 
 
 		Mesh cylinder_mesh_thin(init.comm(), NDIM-1);
@@ -382,25 +379,14 @@ int main(int argc, char* argv[])
                                                          bc_coefs_name, app_initializer->getComponentDatabase(bc_coefs_db_name),
                                                          grid_geometry);
             }
-            
-                //~ for (int d = 0; d < NDIM; ++d)
-                //~ u_bc_coefs[d] = new VelocityBcCoefs(D, w, P_L, P_R, d);
 
                 navier_stokes_integrator->registerPhysicalBoundaryConditions(u_bc_coefs);
-                
-             //~ if (input_db->keyExists("BoundaryStabilization"))
-            //~ {
-                //~ time_integrator->registerBodyForceFunction(new StaggeredStokesOpenBoundaryStabilizer(
-                    //~ "BoundaryStabilization",
-                    //~ app_initializer->getComponentDatabase("BoundaryStabilization"),
-                    //~ navier_stokes_integrator,
-                    //~ grid_geometry));
-            //~ }
+
         }
         // Create Eulerian body force function specification objects.
 
         time_integrator->registerBodyForceFunction(
-            new FeedbackForcer(H, D, navier_stokes_integrator, patch_hierarchy));
+            new hagen_poiseuille_FeedbackForcer(H, D, navier_stokes_integrator, patch_hierarchy));
 
         // Set up visualization plot file writers.
         Pointer<VisItDataWriter<NDIM> > visit_data_writer =
@@ -664,28 +650,13 @@ void compute_velocity_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
             const Box<NDIM>& patch_box = patch->getBox();
             const CellIndex<NDIM>& patch_lower = patch_box.lower();
             const CellIndex<NDIM>& patch_upper = patch_box.upper();
-            //            const CellIndex<NDIM>& patch_lower_left = patch_box.lower_left();
-            //            const CellIndex<NDIM>& patch_lower_right = patch_box.lower_right();
-            //            const CellIndex<NDIM>& patch_upper_left = patch_box.upper_left();
-            //            const CellIndex<NDIM>& patch_upper_right = patch_box.upper_right();
-            
+
             const Pointer<CartesianPatchGeometry<NDIM> > patch_geom =
             patch->getPatchGeometry();
             const double* const patch_x_lower = patch_geom->getXLower();
             const double* const patch_x_upper = patch_geom->getXUpper();
-            //            const double* const patch_x_lower_left = patch_geom->getXLower_Left();
-            //            const double* const patch_x_lower_right = patch_geom->getXLower_Right();
-            //            const double* const patch_x_upper_left = patch_geom->getXUpper_Left();
-            //            const double* const patch_x_upper_right = patch_geom->getXUpper_Right();
             const double* const patch_dx = patch_geom->getDx();
             
-            //~ const bool inside_patch =
-            //~ x_loc_min >= patch_x_lower[0] && x_loc_max <= patch_x_upper[0] &&
-            //~ !(patch_x_upper[1] < y_loc_min || patch_x_lower[1] > y_loc_max) &&
-            //~ !(patch_x_upper[2] < z_loc_min || patch_x_lower[2] > z_loc_max);
-            //~ const bool inside_patch = patch_x_lower[0] >= x_loc_min  && patch_x_upper[0] <= x_loc_max;
-
-            //~ if (!inside_patch) continue;
             
             // Entire box containing the required data.
             Box<NDIM> box(IndexUtilities::getCellIndex(&X_min[0], patch_x_lower, patch_x_upper,
@@ -732,21 +703,7 @@ void compute_velocity_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                     patch_x_lower[2] + patch_dx[2] * (lower_idx(2) - patch_lower(2) + 0.5);
                     const double xu =
                     patch_x_lower[0] + patch_dx[0] * (lower_idx(0) - patch_lower(0));
-                    
-                    const double yv =
-                    patch_x_lower[1] + patch_dx[1] * (lower_idx(1) - patch_lower(1));
-                    const double zv =
-                    patch_x_lower[2] + patch_dx[2] * (lower_idx(2) - patch_lower(2) + 0.5);
-                    const double xv =
-                    patch_x_lower[0] + patch_dx[0] * (lower_idx(0) - patch_lower(0)+ 0.5);
-                    
-                    
-                    const double yw =
-                    patch_x_lower[1] + patch_dx[1] * (lower_idx(1) - patch_lower(1) + 0.5);
-                    const double zw =
-                    patch_x_lower[2] + patch_dx[2] * (lower_idx(2) - patch_lower(2));
-                    const double xw =
-                    patch_x_lower[0] + patch_dx[0] * (lower_idx(0) - patch_lower(0) + 0.5);
+
 
 					double u_ex, v_ex, w_ex;
 					
@@ -763,9 +720,6 @@ void compute_velocity_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                         w_ex = 0.0;
                      }
                      
-
-
-                    //~ const double x1 = x0 + patch_dx[0];
                     const double u0 =
                     (*u_data)(SideIndex<NDIM>(lower_idx, 0, SideIndex<NDIM>::Lower));
                      const double v0 =
@@ -773,10 +727,6 @@ void compute_velocity_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                      const double w0 =
                     (*u_data)(SideIndex<NDIM>(lower_idx, 2, SideIndex<NDIM>::Lower));
 
-                    //~ const double u1 =
-                    //~ (*u_data)(SideIndex<NDIM>(upper_idx, 0, SideIndex<NDIM>::Lower));
-                    //~ pos_values.push_back(y);
-                    //~ pos_values.push_back(u0 + (u1 - u0) * (x_loc - x0) / (x1 - x0));
                     if (xu > 0.4*L && xu < 0.6*L) 
                     {
 						qp_tot +=1;
@@ -798,7 +748,6 @@ void compute_velocity_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
         SAMRAI_MPI::sumReduction(&u_Eulerian_L2_norm, 1);
         SAMRAI_MPI::maxReduction(&u_Eulerian_max_norm, 1);
 
-      //  u_Eulerian_L2_norm = sqrt(u_Eulerian_L2_norm/static_cast<Real>(qp_tot));
 		u_Eulerian_L2_norm = sqrt(u_Eulerian_L2_norm);
          
          pout << " u_Eulerian_L2_norm = " << u_Eulerian_L2_norm <<"\n\n";
@@ -923,7 +872,6 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
         }
     }
     SAMRAI_MPI::sumReduction(F_integral, NDIM);
-    static const double rho = 1.0;
 
     static const double D = 1.0;
     
@@ -1051,8 +999,7 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
 				
 			}
 		}
-        // SAMRAI_MPI::sumReduction(&U_L2_norm, 1);
-        // SAMRAI_MPI::maxReduction(&U_max_norm, 1);
+
 		SAMRAI_MPI::sumReduction(&qp_tot, 1);
 		
         SAMRAI_MPI::sumReduction(&WSS_L2_norm, 1);
@@ -1064,10 +1011,10 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
         SAMRAI_MPI::sumReduction(&P_L2_norm, 1);
         SAMRAI_MPI::maxReduction(&P_max_norm, 1);
         
-        //~ U_L2_norm = sqrt(U_L2_norm/static_cast<Real>(qp_tot));
-        //~ WSS_L2_norm = sqrt(WSS_L2_norm/static_cast<Real>(qp_tot));
-        //~ disp_L2_norm = sqrt(disp_L2_norm/static_cast<Real>(qp_tot));
-        //~ P_L2_norm = sqrt(P_L2_norm/static_cast<Real>(qp_tot));
+        // U_L2_norm = sqrt(U_L2_norm/static_cast<Real>(qp_tot));
+        // WSS_L2_norm = sqrt(WSS_L2_norm/static_cast<Real>(qp_tot));
+        // disp_L2_norm = sqrt(disp_L2_norm/static_cast<Real>(qp_tot));
+        // P_L2_norm = sqrt(P_L2_norm/static_cast<Real>(qp_tot));
         
         U_L2_norm = sqrt(U_L2_norm);
         WSS_L2_norm = sqrt(WSS_L2_norm);
@@ -1122,27 +1069,14 @@ void compute_pressure_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
             const Box<NDIM>& patch_box = patch->getBox();
             const CellIndex<NDIM>& patch_lower = patch_box.lower();
             const CellIndex<NDIM>& patch_upper = patch_box.upper();
-            //            const CellIndex<NDIM>& patch_lower_left = patch_box.lower_left();
-            //            const CellIndex<NDIM>& patch_lower_right = patch_box.lower_right();
-            //            const CellIndex<NDIM>& patch_upper_left = patch_box.upper_left();
-            //            const CellIndex<NDIM>& patch_upper_right = patch_box.upper_right();
+
             
             const Pointer<CartesianPatchGeometry<NDIM> > patch_geom =
             patch->getPatchGeometry();
             const double* const patch_x_lower = patch_geom->getXLower();
             const double* const patch_x_upper = patch_geom->getXUpper();
-            //            const double* const patch_x_lower_left = patch_geom->getXLower_Left();
-            //            const double* const patch_x_lower_right = patch_geom->getXLower_Right();
-            //            const double* const patch_x_upper_left = patch_geom->getXUpper_Left();
-            //            const double* const patch_x_upper_right = patch_geom->getXUpper_Right();
             const double* const patch_dx = patch_geom->getDx();
-            
-            //~ const bool inside_patch =
-            //~ x_loc >= patch_x_lower[0] && x_loc <= patch_x_upper[0] &&
-            //~ !(patch_x_upper[1] < y_loc_min || patch_x_lower[1] > y_loc_max) &&
-            //~ !(patch_x_upper[2] < z_loc_min || patch_x_lower[2] > z_loc_max);
-        //    const bool inside_patch = patch_x_lower[0] >= x_loc_min  && patch_x_upper[0] <= x_loc_max;
-          //  if (!inside_patch) continue;
+           
             
             // Entire box containing the required data.
             Box<NDIM> box(IndexUtilities::getCellIndex(&X_min[0], patch_x_lower, patch_x_upper,
