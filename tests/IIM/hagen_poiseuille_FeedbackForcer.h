@@ -1,4 +1,4 @@
-// Filename: FeedbackForcer.h
+// Filename: hagen_poiseuille_FeedbackForcer.h
 // Created on 08 Sep 2007 by Boyce Griffith
 
 #ifndef included_FeedbackForcer
@@ -19,17 +19,17 @@
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
 /*!
- * \brief Class FeedbackForcer is an implementation of the strategy class
+ * \brief Class hagen_poiseuille_FeedbackForcer is an implementation of the strategy class
  * CartGridFunction that is used to specify velocity boundary conditions via a
  * feedback forcing (i.e., penalty) method.
  */
-class FeedbackForcer : public CartGridFunction
+class hagen_poiseuille_FeedbackForcer : public CartGridFunction
 {
 public:
     /*!
      * \brief Constructor
      */
-    FeedbackForcer(const double height,
+    hagen_poiseuille_FeedbackForcer(const double height,
                    const double diameter,
                    const INSHierarchyIntegrator* fluid_solver,
                    Pointer<PatchHierarchy<NDIM> > patch_hierarchy);
@@ -37,7 +37,7 @@ public:
     /*!
      * \brief Destructor.
      */
-    virtual ~FeedbackForcer();
+    virtual ~hagen_poiseuille_FeedbackForcer();
 
     /*!
      * \name Implementation of CartGridFunction interface.
@@ -68,7 +68,7 @@ private:
      *
      * \note This constructor is not implemented and should not be used.
      */
-    FeedbackForcer();
+    hagen_poiseuille_FeedbackForcer();
 
     /*!
      * \brief Copy constructor.
@@ -77,7 +77,7 @@ private:
      *
      * \param from The value to copy to this object.
      */
-    FeedbackForcer(const FeedbackForcer& from);
+    hagen_poiseuille_FeedbackForcer(const hagen_poiseuille_FeedbackForcer& from);
 
     /*!
      * \brief Assignment operator.
@@ -88,7 +88,7 @@ private:
      *
      * \return A reference to this object.
      */
-    FeedbackForcer& operator=(const FeedbackForcer& that);
+    hagen_poiseuille_FeedbackForcer& operator=(const hagen_poiseuille_FeedbackForcer& that);
 
     const double d_D, d_H;
     const INSHierarchyIntegrator* const d_fluid_solver;

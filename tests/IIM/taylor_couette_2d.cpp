@@ -1,4 +1,4 @@
-//  2016-2021, written by  Ebrahim (Amin) Kolahdouz
+//  2016-2021, created by  Ebrahim (Amin) Kolahdouz
 // Taylor Couette flow (2D)
 // See Sec. 4.2 of "An immersed interface method for discrete surfaces" 
 //  by Ebrahim M. Kolahdouz et al., Journal of Computational Physics 400 (2020) 108854
