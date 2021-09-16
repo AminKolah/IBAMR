@@ -1,4 +1,4 @@
-//  2018-2021, written by  Amin Kolahdouz
+//  2018-2021, created by  Amin Kolahdouz
 // 3D Hagen–Poiseuille flow in a pipe
 // See Sec. 4.1.2 of "An immersed interface method for discrete surfaces" 
 //  by Ebrahim M. Kolahdouz et al., Journal of Computational Physics 400 (2020) 108854
@@ -23,7 +23,7 @@
 #include <CartesianGridGeometry.h>
 #include <LoadBalancer.h>
 #include <StandardTagAndInitialize.h>
-#include <FeedbackForcer.h>
+#include <hagen_poiseuille_FeedbackForcer.h>
 
 // Headers for basic libMesh objects
 #include <libmesh/boundary_info.h>

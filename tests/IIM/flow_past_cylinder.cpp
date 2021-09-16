@@ -1,4 +1,4 @@
-//  2018-2021, written by  Ebrahim (Amin) Kolahdouz
+//  2018-2021, created by  Ebrahim (Amin) Kolahdouz
 // Flow past a stationary cylinders
 // See Sec. 4.4 of "An immersed interface method for discrete surfaces" 
 //  by Ebrahim M. Kolahdouz et al., Journal of Computational Physics 400 (2020) 108854
