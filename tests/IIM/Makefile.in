@@ -88,8 +88,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 EXTRA_PROGRAMS = $(am__EXEEXT_1)
-@LIBMESH_ENABLED_TRUE@am__append_1 = fe_mechanics_ex0_2d fe_mechanics_ex0_3d
-subdir = tests/fe_mechanics
+@LIBMESH_ENABLED_TRUE@am__append_1 = taylor_couette_2d taylor_couette_3d
+subdir = tests/IIM
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/add_rpath.m4 \
 	$(top_srcdir)/m4/ax_cxx_compile_stdcxx_11.m4 \
@@ -120,29 +120,29 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config/IBAMR_config.h.tmp
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-@LIBMESH_ENABLED_TRUE@am__EXEEXT_1 = fe_mechanics_ex0_2d$(EXEEXT) \
-@LIBMESH_ENABLED_TRUE@	fe_mechanics_ex0_3d$(EXEEXT)
-am__fe_mechanics_ex0_2d_SOURCES_DIST = fe_mechanics_ex0.cpp
-@LIBMESH_ENABLED_TRUE@am_fe_mechanics_ex0_2d_OBJECTS = fe_mechanics_ex0_2d-fe_mechanics_ex0.$(OBJEXT)
-fe_mechanics_ex0_2d_OBJECTS = $(am_fe_mechanics_ex0_2d_OBJECTS)
-@LIBMESH_ENABLED_TRUE@fe_mechanics_ex0_2d_DEPENDENCIES =  \
+@LIBMESH_ENABLED_TRUE@am__EXEEXT_1 = taylor_couette_2d$(EXEEXT) \
+@LIBMESH_ENABLED_TRUE@	taylor_couette_3d$(EXEEXT)
+am__taylor_couette_2d_SOURCES_DIST = taylor_couette_2d.cpp
+@LIBMESH_ENABLED_TRUE@am_taylor_couette_2d_OBJECTS = taylor_couette_2d-taylor_couette_2d.$(OBJEXT)
+taylor_couette_2d_OBJECTS = $(am_taylor_couette_2d_OBJECTS)
+@LIBMESH_ENABLED_TRUE@taylor_couette_2d_DEPENDENCIES =  \
 @LIBMESH_ENABLED_TRUE@	$(IBAMR2d_LIBS) $(IBAMR_LIBS)
-AM_V_lt = $(am__v_lt_@AM_V@)
+AM_V_lt = $(am__v_lt_@AM_V@)chanics_ex0
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-fe_mechanics_ex0_2d_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+taylor_couette_2d_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(fe_mechanics_ex0_2d_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(taylor_couette_2d_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-am__fe_mechanics_ex0_3d_SOURCES_DIST = fe_mechanics_ex0.cpp
-@LIBMESH_ENABLED_TRUE@am_fe_mechanics_ex0_3d_OBJECTS = fe_mechanics_ex0_3d-fe_mechanics_ex0.$(OBJEXT)
-fe_mechanics_ex0_3d_OBJECTS = $(am_fe_mechanics_ex0_3d_OBJECTS)
-@LIBMESH_ENABLED_TRUE@fe_mechanics_ex0_3d_DEPENDENCIES =  \
+am__taylor_couette_3d_SOURCES_DIST = taylor_couette_3d.cpp
+@LIBMESH_ENABLED_TRUE@am_taylor_couette_3d_OBJECTS = taylor_couette_3d-taylor_couette_3d.$(OBJEXT)
+taylor_couette_3d_OBJECTS = $(am_taylor_couette_3d_OBJECTS)
+@LIBMESH_ENABLED_TRUE@taylor_couette_3d_DEPENDENCIES =  \
 @LIBMESH_ENABLED_TRUE@	$(IBAMR3d_LIBS) $(IBAMR_LIBS)
-fe_mechanics_ex0_3d_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+taylor_couette_3d_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(fe_mechanics_ex0_3d_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(taylor_couette_3d_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -160,8 +160,8 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/config
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade =  \
-	./$(DEPDIR)/fe_mechanics_ex0_2d-fe_mechanics_ex0.Po \
-	./$(DEPDIR)/fe_mechanics_ex0_3d-fe_mechanics_ex0.Po
+	./$(DEPDIR)/taylor_couette_2d-taylor_couette_2d.Po \
+	./$(DEPDIR)/taylor_couette_3d-taylor_couette_3d.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -181,10 +181,10 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(fe_mechanics_ex0_2d_SOURCES) \
-	$(fe_mechanics_ex0_3d_SOURCES)
-DIST_SOURCES = $(am__fe_mechanics_ex0_2d_SOURCES_DIST) \
-	$(am__fe_mechanics_ex0_3d_SOURCES_DIST)
+SOURCES = $(taylor_couette_2d_SOURCES) \
+	$(taylor_couette_3d_SOURCES)
+DIST_SOURCES = $(am__taylor_couette_2d_SOURCES_DIST) \
+	$(am__taylor_couette_3d_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -476,12 +476,12 @@ IBAMR2d_LIBS = ${top_builddir}/lib/libIBAMR2d.a ${top_builddir}/ibtk/lib/libIBTK
 IBAMR3d_LIBS = ${top_builddir}/lib/libIBAMR3d.a ${top_builddir}/ibtk/lib/libIBTK3d.a
 pkg_includedir = $(includedir)/@PACKAGE@
 SUFFIXES = .f.m4
-@LIBMESH_ENABLED_TRUE@fe_mechanics_ex0_2d_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=2
-@LIBMESH_ENABLED_TRUE@fe_mechanics_ex0_2d_LDADD = $(IBAMR_LDFLAGS) $(IBAMR2d_LIBS) $(IBAMR_LIBS)
-@LIBMESH_ENABLED_TRUE@fe_mechanics_ex0_2d_SOURCES = fe_mechanics_ex0.cpp
-@LIBMESH_ENABLED_TRUE@fe_mechanics_ex0_3d_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=3
-@LIBMESH_ENABLED_TRUE@fe_mechanics_ex0_3d_LDADD = $(IBAMR_LDFLAGS) $(IBAMR3d_LIBS) $(IBAMR_LIBS)
-@LIBMESH_ENABLED_TRUE@fe_mechanics_ex0_3d_SOURCES = fe_mechanics_ex0.cpp
+@LIBMESH_ENABLED_TRUE@taylor_couette_2d_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=2
+@LIBMESH_ENABLED_TRUE@taylor_couette_2d_LDADD = $(IBAMR_LDFLAGS) $(IBAMR2d_LIBS) $(IBAMR_LIBS)
+@LIBMESH_ENABLED_TRUE@taylor_couette_2d_SOURCES = taylor_couette_2d.cpp
+@LIBMESH_ENABLED_TRUE@taylor_couette_3d_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=3
+@LIBMESH_ENABLED_TRUE@taylor_couette_3d_LDADD = $(IBAMR_LDFLAGS) $(IBAMR3d_LIBS) $(IBAMR_LIBS)
+@LIBMESH_ENABLED_TRUE@taylor_couette_3d_SOURCES = taylor_couette_3d.cpp
 all: all-am
 
 .SUFFIXES:
@@ -495,9 +495,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tests/fe_mechanics/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tests/IIM/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign tests/fe_mechanics/Makefile
+	  $(AUTOMAKE) --foreign tests/IIM/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -517,13 +517,13 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 
-fe_mechanics_ex0_2d$(EXEEXT): $(fe_mechanics_ex0_2d_OBJECTS) $(fe_mechanics_ex0_2d_DEPENDENCIES) $(EXTRA_fe_mechanics_ex0_2d_DEPENDENCIES) 
-	@rm -f fe_mechanics_ex0_2d$(EXEEXT)
-	$(AM_V_CXXLD)$(fe_mechanics_ex0_2d_LINK) $(fe_mechanics_ex0_2d_OBJECTS) $(fe_mechanics_ex0_2d_LDADD) $(LIBS)
+taylor_couette_2d$(EXEEXT): $(taylor_couette_2d_OBJECTS) $(taylor_couette_2d_DEPENDENCIES) $(EXTRA_taylor_couette_2d_DEPENDENCIES) 
+	@rm -f taylor_couette_2d$(EXEEXT)
+	$(AM_V_CXXLD)$(taylor_couette_2d_LINK) $(taylor_couette_2d_OBJECTS) $(taylor_couette_2d_LDADD) $(LIBS)
 
-fe_mechanics_ex0_3d$(EXEEXT): $(fe_mechanics_ex0_3d_OBJECTS) $(fe_mechanics_ex0_3d_DEPENDENCIES) $(EXTRA_fe_mechanics_ex0_3d_DEPENDENCIES) 
-	@rm -f fe_mechanics_ex0_3d$(EXEEXT)
-	$(AM_V_CXXLD)$(fe_mechanics_ex0_3d_LINK) $(fe_mechanics_ex0_3d_OBJECTS) $(fe_mechanics_ex0_3d_LDADD) $(LIBS)
+taylor_couette_3d$(EXEEXT): $(taylor_couette_3d_OBJECTS) $(taylor_couette_3d_DEPENDENCIES) $(EXTRA_taylor_couette_3d_DEPENDENCIES) 
+	@rm -f taylor_couette_3d$(EXEEXT)
+	$(AM_V_CXXLD)$(taylor_couette_3d_LINK) $(taylor_couette_3d_OBJECTS) $(taylor_couette_3d_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -531,8 +531,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fe_mechanics_ex0_2d-fe_mechanics_ex0.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fe_mechanics_ex0_3d-fe_mechanics_ex0.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/taylor_couette_2d-taylor_couette_2d.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/taylor_couette_3d-taylor_couette_3d.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -564,33 +564,33 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
 
-fe_mechanics_ex0_2d-fe_mechanics_ex0.o: fe_mechanics_ex0.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fe_mechanics_ex0_2d_CXXFLAGS) $(CXXFLAGS) -MT fe_mechanics_ex0_2d-fe_mechanics_ex0.o -MD -MP -MF $(DEPDIR)/fe_mechanics_ex0_2d-fe_mechanics_ex0.Tpo -c -o fe_mechanics_ex0_2d-fe_mechanics_ex0.o `test -f 'fe_mechanics_ex0.cpp' || echo '$(srcdir)/'`fe_mechanics_ex0.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fe_mechanics_ex0_2d-fe_mechanics_ex0.Tpo $(DEPDIR)/fe_mechanics_ex0_2d-fe_mechanics_ex0.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='fe_mechanics_ex0.cpp' object='fe_mechanics_ex0_2d-fe_mechanics_ex0.o' libtool=no @AMDEPBACKSLASH@
+taylor_couette_2d-taylor_couette_2d.o: taylor_couette_2d.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(taylor_couette_2d_CXXFLAGS) $(CXXFLAGS) -MT taylor_couette_2d-taylor_couette_2d.o -MD -MP -MF $(DEPDIR)/taylor_couette_2d-taylor_couette_2d.Tpo -c -o taylor_couette_2d-taylor_couette_2d.o `test -f 'taylor_couette_2d.cpp' || echo '$(srcdir)/'`taylor_couette_2d.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/taylor_couette_2d-taylor_couette_2d.Tpo $(DEPDIR)/taylor_couette_2d-taylor_couette_2d.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='taylor_couette_2d.cpp' object='taylor_couette_2d-taylor_couette_2d.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fe_mechanics_ex0_2d_CXXFLAGS) $(CXXFLAGS) -c -o fe_mechanics_ex0_2d-fe_mechanics_ex0.o `test -f 'fe_mechanics_ex0.cpp' || echo '$(srcdir)/'`fe_mechanics_ex0.cpp
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(taylor_couette_2d_CXXFLAGS) $(CXXFLAGS) -c -o taylor_couette_2d-taylor_couette_2d.o `test -f 'taylor_couette_2d.cpp' || echo '$(srcdir)/'`ftaylor_couette_2d.cpp
 
-fe_mechanics_ex0_2d-fe_mechanics_ex0.obj: fe_mechanics_ex0.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fe_mechanics_ex0_2d_CXXFLAGS) $(CXXFLAGS) -MT fe_mechanics_ex0_2d-fe_mechanics_ex0.obj -MD -MP -MF $(DEPDIR)/fe_mechanics_ex0_2d-fe_mechanics_ex0.Tpo -c -o fe_mechanics_ex0_2d-fe_mechanics_ex0.obj `if test -f 'fe_mechanics_ex0.cpp'; then $(CYGPATH_W) 'fe_mechanics_ex0.cpp'; else $(CYGPATH_W) '$(srcdir)/fe_mechanics_ex0.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fe_mechanics_ex0_2d-fe_mechanics_ex0.Tpo $(DEPDIR)/fe_mechanics_ex0_2d-fe_mechanics_ex0.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='fe_mechanics_ex0.cpp' object='fe_mechanics_ex0_2d-fe_mechanics_ex0.obj' libtool=no @AMDEPBACKSLASH@
+taylor_couette_2d-taylor_couette_2d.obj: taylor_couette_2d.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(taylor_couette_2d_CXXFLAGS) $(CXXFLAGS) -MT taylor_couette_2d-taylor_couette_2d.obj -MD -MP -MF $(DEPDIR)/taylor_couette_2d-taylor_couette_2d.Tpo -c -o taylor_couette_2d-taylor_couette_2d.obj `if test -f 'taylor_couette_2d.cpp'; then $(CYGPATH_W) 'taylor_couette_2d.cpp'; else $(CYGPATH_W) '$(srcdir)/taylor_couette_2d.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/taylor_couette_2d-taylor_couette_2d.Tpo $(DEPDIR)/taylor_couette_2d-taylor_couette_2d.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='taylor_couette_2d.cpp' object='taylor_couette_2d-taylor_couette_2d.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fe_mechanics_ex0_2d_CXXFLAGS) $(CXXFLAGS) -c -o fe_mechanics_ex0_2d-fe_mechanics_ex0.obj `if test -f 'fe_mechanics_ex0.cpp'; then $(CYGPATH_W) 'fe_mechanics_ex0.cpp'; else $(CYGPATH_W) '$(srcdir)/fe_mechanics_ex0.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(taylor_couette_2d_CXXFLAGS) $(CXXFLAGS) -c -o taylor_couette_2d-taylor_couette_2d.obj `if test -f 'taylor_couette_2d.cpp'; then $(CYGPATH_W) 'taylor_couette_2d.cpp'; else $(CYGPATH_W) '$(srcdir)/taylor_couette_2d.cpp'; fi`
 
-fe_mechanics_ex0_3d-fe_mechanics_ex0.o: fe_mechanics_ex0.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fe_mechanics_ex0_3d_CXXFLAGS) $(CXXFLAGS) -MT fe_mechanics_ex0_3d-fe_mechanics_ex0.o -MD -MP -MF $(DEPDIR)/fe_mechanics_ex0_3d-fe_mechanics_ex0.Tpo -c -o fe_mechanics_ex0_3d-fe_mechanics_ex0.o `test -f 'fe_mechanics_ex0.cpp' || echo '$(srcdir)/'`fe_mechanics_ex0.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fe_mechanics_ex0_3d-fe_mechanics_ex0.Tpo $(DEPDIR)/fe_mechanics_ex0_3d-fe_mechanics_ex0.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='fe_mechanics_ex0.cpp' object='fe_mechanics_ex0_3d-fe_mechanics_ex0.o' libtool=no @AMDEPBACKSLASH@
+taylor_couette_3d-taylor_couette_3d.o: taylor_couette_3d.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(taylor_couette_3d_CXXFLAGS) $(CXXFLAGS) -MT taylor_couette_3d-taylor_couette_3d.o -MD -MP -MF $(DEPDIR)/taylor_couette_3d-taylor_couette_3d.Tpo -c -o taylor_couette_3d-taylor_couette_3d.o `test -f 'taylor_couette_3d.cpp' || echo '$(srcdir)/'`taylor_couette_3d.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/taylor_couette_3d-taylor_couette_3d.Tpo $(DEPDIR)/taylor_couette_3d-taylor_couette_3d.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='taylor_couette_3d.cpp' object='taylor_couette_3d-taylor_couette_3d.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fe_mechanics_ex0_3d_CXXFLAGS) $(CXXFLAGS) -c -o fe_mechanics_ex0_3d-fe_mechanics_ex0.o `test -f 'fe_mechanics_ex0.cpp' || echo '$(srcdir)/'`fe_mechanics_ex0.cpp
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(taylor_couette_3d_CXXFLAGS) $(CXXFLAGS) -c -o taylor_couette_3d-taylor_couette_3d.o `test -f 'taylor_couette_3d.cpp' || echo '$(srcdir)/'`taylor_couette_3d.cpp
 
-fe_mechanics_ex0_3d-fe_mechanics_ex0.obj: fe_mechanics_ex0.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fe_mechanics_ex0_3d_CXXFLAGS) $(CXXFLAGS) -MT fe_mechanics_ex0_3d-fe_mechanics_ex0.obj -MD -MP -MF $(DEPDIR)/fe_mechanics_ex0_3d-fe_mechanics_ex0.Tpo -c -o fe_mechanics_ex0_3d-fe_mechanics_ex0.obj `if test -f 'fe_mechanics_ex0.cpp'; then $(CYGPATH_W) 'fe_mechanics_ex0.cpp'; else $(CYGPATH_W) '$(srcdir)/fe_mechanics_ex0.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fe_mechanics_ex0_3d-fe_mechanics_ex0.Tpo $(DEPDIR)/fe_mechanics_ex0_3d-fe_mechanics_ex0.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='fe_mechanics_ex0.cpp' object='fe_mechanics_ex0_3d-fe_mechanics_ex0.obj' libtool=no @AMDEPBACKSLASH@
+taylor_couette_3d-taylor_couette_3d.obj: taylor_couette_3d.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(taylor_couette_3d_CXXFLAGS) $(CXXFLAGS) -MT taylor_couette_3d-taylor_couette_3d.obj -MD -MP -MF $(DEPDIR)/taylor_couette_3d-taylor_couette_3d.Tpo -c -o taylor_couette_3d-taylor_couette_3d.obj `if test -f 'taylor_couette_3d.cpp'; then $(CYGPATH_W) 'taylor_couette_3d.cpp'; else $(CYGPATH_W) '$(srcdir)/taylor_couette_3d.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/taylor_couette_3d-taylor_couette_3d.Tpo $(DEPDIR)/taylor_couette_3d-taylor_couette_3d.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='taylor_couette_3d.cpp' object='taylor_couette_3d-taylor_couette_3d.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fe_mechanics_ex0_3d_CXXFLAGS) $(CXXFLAGS) -c -o fe_mechanics_ex0_3d-fe_mechanics_ex0.obj `if test -f 'fe_mechanics_ex0.cpp'; then $(CYGPATH_W) 'fe_mechanics_ex0.cpp'; else $(CYGPATH_W) '$(srcdir)/fe_mechanics_ex0.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(taylor_couette_3d_CXXFLAGS) $(CXXFLAGS) -c -o taylor_couette_3d-taylor_couette_3d.obj `if test -f 'taylor_couette_3d.cpp'; then $(CYGPATH_W) 'taylor_couette_3d.cpp'; else $(CYGPATH_W) '$(srcdir)/taylor_couette_3d.cpp'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -723,8 +723,8 @@ clean: clean-am
 clean-am: clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/fe_mechanics_ex0_2d-fe_mechanics_ex0.Po
-	-rm -f ./$(DEPDIR)/fe_mechanics_ex0_3d-fe_mechanics_ex0.Po
+		-rm -f ./$(DEPDIR)/taylor_couette_2d-taylor_couette_2d.Po
+	-rm -f ./$(DEPDIR)/taylor_couette_3d-taylor_couette_3d.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -770,8 +770,8 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/fe_mechanics_ex0_2d-fe_mechanics_ex0.Po
-	-rm -f ./$(DEPDIR)/fe_mechanics_ex0_3d-fe_mechanics_ex0.Po
+		-rm -f ./$(DEPDIR)/taylor_couette_2d-taylor_couette_2d.Po
+	-rm -f ./$(DEPDIR)/taylor_couette_3d-taylor_couette_3d.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
