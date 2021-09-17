@@ -245,7 +245,6 @@ int main(int argc, char* argv[])
 				   cylinder_mesh_thin.add_point(libMesh::Point(L*static_cast<Real>(j)/static_cast<Real>(NXi_elem),0.5*H + 0.5*D*cos(theta), 0.5*H + 0.5*D*sin(theta)), node_id++);
 			}
 		}
-        BoundaryInfo& boundary_info_cylinder = cylinder_mesh_thin.get_boundary_info(); 
         
       
         
@@ -468,7 +467,6 @@ int main(int argc, char* argv[])
             VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
             Pointer<hier::Variable<NDIM> > u_var = time_integrator->getVelocityVariable();
             Pointer<VariableContext> current_ctx = time_integrator->getCurrentContext();
-            const int u_idx = var_db->mapVariableAndContextToIndex(u_var, current_ctx);
 
             // At specified intervals, write visualization and restart files,
             // print out timer data, and store hierarchy data for post
@@ -695,8 +693,7 @@ void compute_velocity_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                 for (Box<NDIM>::Iterator bit(iterate_box); bit; bit++)
                 {
                     const CellIndex<NDIM>& lower_idx = *bit;
-                   // CellIndex<NDIM> upper_idx = lower_idx;
-                   // upper_idx(0) += 1;
+
                     const double yu =
                     patch_x_lower[1] + patch_dx[1] * (lower_idx(1) - patch_lower(1) + 0.5);
                     const double zu =
@@ -759,8 +756,6 @@ void compute_velocity_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
 
 void output_data(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                  Pointer<INSHierarchyIntegrator> navier_stokes_integrator,
-                 //~ Mesh& mesh,
-                 //~ EquationSystems* equation_systems,
                  const int iteration_num,
                  const double loop_time,
                  const string& data_dump_dirname)
@@ -1010,12 +1005,7 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
         SAMRAI_MPI::maxReduction(&disp_max_norm, 1);
         SAMRAI_MPI::sumReduction(&P_L2_norm, 1);
         SAMRAI_MPI::maxReduction(&P_max_norm, 1);
-        
-        // U_L2_norm = sqrt(U_L2_norm/static_cast<Real>(qp_tot));
-        // WSS_L2_norm = sqrt(WSS_L2_norm/static_cast<Real>(qp_tot));
-        // disp_L2_norm = sqrt(disp_L2_norm/static_cast<Real>(qp_tot));
-        // P_L2_norm = sqrt(P_L2_norm/static_cast<Real>(qp_tot));
-        
+
         U_L2_norm = sqrt(U_L2_norm);
         WSS_L2_norm = sqrt(WSS_L2_norm);
         disp_L2_norm = sqrt(disp_L2_norm);
@@ -1154,8 +1144,6 @@ void compute_pressure_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
 		SAMRAI_MPI::sumReduction(&qp_tot, 1);
         SAMRAI_MPI::sumReduction(&p_Eulerian_L2_norm, 1);
         SAMRAI_MPI::maxReduction(&p_Eulerian_max_norm, 1);
-
-        //p_Eulerian_L2_norm = sqrt(p_Eulerian_L2_norm/static_cast<Real>(qp_tot));
  
         p_Eulerian_L2_norm = sqrt(p_Eulerian_L2_norm);
         
