@@ -190,8 +190,6 @@ main(int argc, char* argv[])
         ds = mfac * dx;
 
         const double LL = input_db->getDouble("MAX_LEVELS");
-        const double Re = input_db->getDouble("Re");
-        const double DT = input_db->getDouble("DT");
         string elem_type = input_db->getString("ELEM_TYPE");
         R = input_db->getDouble("R");
         if (NDIM == 2 && (elem_type == "TRI3" || elem_type == "TRI6"))
@@ -492,32 +490,12 @@ main(int argc, char* argv[])
                 pout << "\nWriting timer data...\n\n";
                 TimerManager::getManager()->print(plog);
             }
-            //~ if (dump_postproc_data && (iteration_num % postproc_data_dump_interval == 0 || last_step))
-            //~ {
+
             VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
             const Pointer<hier::Variable<NDIM> > p_var = time_integrator->getPressureVariable();
 			const Pointer<VariableContext> p_ctx = time_integrator->getCurrentContext();
 			const int p_idx = var_db->mapVariableAndContextToIndex(p_var, p_ctx);
 			
-			 //~ RefineAlgorithm<NDIM> ghost_fill_alg;
-             //~ ghost_fill_alg.registerRefine(p_idx, p_idx, p_idx, NULL);
-				//~ Pointer<RefineSchedule<NDIM> > ghost_fill_schd =
-               //~ ghost_fill_alg.createSchedule(patch_hierarchy->getPatchLevel(0));
-               
-               //~ ghost_fill_schd->fillData(loop_time);
-            
-                //~ ib_method_ops->interpolatePressure(p_idx, std::vector<Pointer<CoarsenSchedule<NDIM> > >(), std::vector<Pointer<RefineSchedule<NDIM> > >(), loop_time);
-                
-				//~ ib_method_ops->computeFluidTraction(loop_time);
-				
-                 //~ postprocess_data(patch_hierarchy,
-                                 //~ navier_stokes_integrator,
-                                  //~ mesh,
-                                 //~ equation_systems,
-                                  //~ iteration_num,
-                                 //~ loop_time,
-                                  //~ postproc_data_dump_dirname);
-            //~ }
         }
 
         // Close the logging streams.
@@ -553,7 +531,6 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
     const unsigned int dim = mesh.mesh_dimension();
     double F_integral[NDIM];
     double T_integral[NDIM];
-   const double tolerance = sqrt(std::numeric_limits<double>::epsilon());
     for (unsigned int d = 0; d < NDIM; ++d) F_integral[d] = 0.0;
     for (unsigned int d = 0; d < NDIM; ++d) T_integral[d] = 0.0;
 
@@ -731,36 +708,12 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
 
 					qp_tot += 1;
 					
-					//~ double theta;
-					//~ if std::abs (n(0))> tolerance
-					//~ {
-					   //~ theta = atan(n(1)/n(0));
-					//~ }
-					//~ else
-					//~ {
-					//~ }
 				    if (SAMRAI_MPI::getRank() == 0)
 					{
 					  lag_quantities_stream << std::abs(X(0)-x_qp(0)) << " " << std::abs(X(1)-x_qp(1)) << " " << U_qp(0) << " " << U_qp(1) << " "<< P_o_qp << " " << WSS_qp(0) << " " << WSS_qp(1) << " " << endl;
 					
 					}	
-                //~ for (unsigned int d = 0; d < NDIM; ++d)
-                //~ {
-					
-                    //~ U_L2_norm += (U_qp(d) - ex_U[d])*(U_qp(d) - ex_U[d])* JxW[qp];
-                    //~ U_max_norm = std::max(U_max_norm, std::abs(U_qp(d) - ex_U[d]));
-                    
-                    //~ WSS_L2_norm += (WSS_qp(d) - ex_wss[d])* (WSS_qp(d) - ex_wss[d]) * JxW[qp];
-                    //~ WSS_max_norm = std::max(WSS_max_norm, std::abs(WSS_qp(d) - ex_wss[d]));  
-                //~ }
-				//~ P_L2_norm += std::abs(P_j_qp - p_ex_qp) * std::abs(P_j_qp - p_ex_qp) * JxW[qp];
-				//~ P_max_norm = std::max(P_max_norm, std::abs(P_j_qp - p_ex_qp));
-                
-               	//~ disp_L2_norm += (X_qp(0)*cos(OMEGA1*loop_time) - X_qp(1)*sin(OMEGA1*loop_time) - x_qp(0))* (X_qp(0)*cos(OMEGA1*loop_time) - X_qp(1)*sin(OMEGA1*loop_time) - x_qp(0)) * JxW[qp];
-               	//~ disp_L2_norm += (X_qp(0)*sin(OMEGA1*loop_time) + X_qp(1)*cos(OMEGA1*loop_time) - x_qp(1))* (X_qp(0)*sin(OMEGA1*loop_time) + X_qp(1)*cos(OMEGA1*loop_time) - x_qp(1)) * JxW[qp];
 
-				//~ disp_max_norm = std::max(disp_max_norm, std::abs(X_qp(0)*cos(OMEGA1*loop_time) - X_qp(1)*sin(OMEGA1*loop_time) - x_qp(0)));
-				//~ disp_max_norm = std::max(disp_max_norm, std::abs(X_qp(0)*sin(OMEGA1*loop_time) + X_qp(1)*cos(OMEGA1*loop_time) - x_qp(1)));
 			}
 		}
 		
