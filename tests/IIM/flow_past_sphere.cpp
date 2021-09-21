@@ -24,9 +24,6 @@
 #include <libmesh/mesh.h>
 #include <libmesh/mesh_generation.h>
 #include <libmesh/mesh_triangle_interface.h>
-#include <libmesh/linear_implicit_system.h>
-#include <libmesh/mesh_function.h>
-#include <libmesh/sparse_matrix.h>
 
 // Headers for application-specific algorithm/data structure objects
 #include <boost/multi_array.hpp>
@@ -44,15 +41,12 @@
 #include <ibamr/app_namespaces.h>
 
 
-
+// Elasticity model data.
 namespace ModelData
 {
-// Tether (penalty) stress function.
-bool use_velocity_jump_conditions = false;
-bool use_pressure_jump_conditions = false;
+// Tether (penalty) force functions.
 static double kappa_s = 1.0e6;
 static double eta_s = 0.0;
-MeshFunction* F_function;
 void
 tether_force_function(VectorValue<double>& F,
                       const VectorValue<double>& n,
@@ -66,20 +60,18 @@ tether_force_function(VectorValue<double>& F,
                       const vector<const vector<VectorValue<double> >*>& /*grad_var_data*/,
                       double /*time*/,
                       void* /*ctx*/)
-
 {
-    DenseVector<double> vals;
-    (*F_function)(X, /*time*/ 0.0, vals);
-    for (int d = 0; d < NDIM; ++d) F(d) = vals(d);
+    const std::vector<double>& U = *var_data[0];
+    for (unsigned int d = 0; d < NDIM; ++d)
+    {
+        F(d) = kappa_s * (X(d) - x(d)) - eta_s * U[d];
+    }
     return;
 } // tether_force_function
 }
 using namespace ModelData;
 
 // Function prototypes
-double tau, kappa, eta;
-void assemble_df_dt(EquationSystems& es, const std::string& system_name);
-void update_force(EquationSystems& es, double dt);
 static ofstream c1_force_stream, c2_force_stream, c3_force_stream, c1_traction_stream, c2_traction_stream, c3_traction_stream, U_L1_norm_stream, U_L2_norm_stream, U_max_norm_stream;
 void postprocess_data(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                       Pointer<INSHierarchyIntegrator> navier_stokes_integrator,
@@ -252,7 +244,7 @@ main(int argc, char* argv[])
 
         // Configure the IBFE solver.
         ib_method_ops->initializeFEEquationSystems();
-        std::vector< int> vars(NDIM);
+        std::vector<int> vars(NDIM);
         for (unsigned int d = 0; d < NDIM; ++d) vars[d] = d;
         
         std::vector<unsigned int> vars2(NDIM);
@@ -261,20 +253,6 @@ main(int argc, char* argv[])
         IIMethod::LagSurfaceForceFcnData surface_fcn_data(tether_force_function, sys_data);
         ib_method_ops->registerLagSurfaceForceFunction(surface_fcn_data);
         EquationSystems* equation_systems = ib_method_ops->getFEDataManager()->getEquationSystems();
-        
-         System& F_system = equation_systems->add_system<LinearImplicitSystem>("time dependent force");
-        FEFamily family = LAGRANGE;
-        Order order = (elem_type == "TRI3" || elem_type == "QUAD4" || elem_type == "TET4" || elem_type == "HEX8") ? FIRST : SECOND;
-        F_system.add_variable("f_x", order, family);
-        F_system.add_variable("f_y", order, family);
-#if (NDIM == 3)
-        F_system.add_variable("f_z", order, family);
-#endif
-        F_system.attach_assemble_function(assemble_df_dt);
-
-        kappa = input_db->getDouble("KAPPA_S");
-        eta = input_db->getDouble("ETA_S");
-        tau = input_db->getDouble("TAU_S");
 
         // Create Eulerian initial condition specification objects.
         if (input_db->keyExists("VelocityInitialConditions"))
@@ -338,9 +316,7 @@ main(int argc, char* argv[])
         // Initialize hierarchy configuration and data on all patches.
         ib_method_ops->initializeFEData();
         time_integrator->initializePatchHierarchy(patch_hierarchy, gridding_algorithm);
-         // Initialize the mesh function.
-        F_function = new MeshFunction(*equation_systems, *F_system.current_local_solution, F_system.get_dof_map(), vars2);
-        F_function->init();
+
         // Deallocate initialization objects.
         app_initializer.setNull();
 
@@ -402,7 +378,7 @@ main(int argc, char* argv[])
             pout << "Simulation time is " << loop_time << "\n";
 
             dt = time_integrator->getMaximumTimeStepSize();
-            update_force(*equation_systems, dt);
+            
             
             time_integrator->advanceHierarchy(dt);
             loop_time += dt;
@@ -472,159 +448,6 @@ main(int argc, char* argv[])
     SAMRAIManager::shutdown();
     return 0;
 } // main
-
-void
-assemble_df_dt(EquationSystems& es, const std::string& /*system_name*/)
-{
-    const MeshBase& mesh = es.get_mesh();
-    const unsigned int dim = mesh.mesh_dimension();
-    LinearImplicitSystem& F_system = es.get_system<LinearImplicitSystem>("time dependent force");
-    const DofMap& dof_map = F_system.get_dof_map();
-    std::vector<dof_id_type> dof_indices;
-    FEType fe_type = dof_map.variable_type(0);
-    libMesh::UniquePtr<FEBase> fe(FEBase::build(dim, fe_type));
-    QGauss qrule(dim, FIFTH);
-    fe->attach_quadrature_rule(&qrule);
-    const std::vector<Real>& JxW = fe->get_JxW();
-    const std::vector<std::vector<Real> >& phi = fe->get_phi();
-
-    const double dt = es.parameters.get<Real>("dt");
-
-    DenseMatrix<Number> Ke;
-    MeshBase::const_element_iterator el = mesh.active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
-    for (; el != end_el; ++el)
-    {
-        const Elem* elem = *el;
-        fe->reinit(elem);
-        for (unsigned int d = 0; d < NDIM; ++d)
-        {
-            dof_map.dof_indices(elem, dof_indices, d);
-            unsigned int Ke_size = static_cast<unsigned int>(dof_indices.size());
-            Ke.resize(Ke_size, Ke_size);
-            for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
-            {
-                for (unsigned int i = 0; i < phi.size(); i++)
-                {
-                    for (unsigned int j = 0; j < phi.size(); j++)
-                    {
-                        Ke(i, j) += (tau / dt + 1.0) * phi[i][qp] * phi[j][qp] * JxW[qp];
-                    }
-                }
-            }
-            dof_map.constrain_element_matrix(Ke, dof_indices);
-            F_system.matrix->add_matrix(Ke, dof_indices);
-        }
-    }
-    F_system.matrix->close();
-}
-
-void
-update_force(EquationSystems& es, const double dt)
-{
-    // Extract the mesh.
-    const MeshBase& mesh = es.get_mesh();
-    const unsigned int dim = mesh.mesh_dimension();
-
-    // Extract the FE systems and DOF maps, and setup the FE object.
-    LinearImplicitSystem& F_system = es.get_system<LinearImplicitSystem>("time dependent force");
-    const DofMap& F_dof_map = F_system.get_dof_map();
-    std::vector<std::vector<unsigned int> > F_dof_indices(NDIM);
-    FEType F_fe_type = F_dof_map.variable_type(0);
-    for (unsigned int d = 0; d < NDIM; ++d)
-    {
-        TBOX_ASSERT(F_dof_map.variable_type(d) == F_fe_type);
-    }
-    System& U_system = es.get_system(IIMethod::VELOCITY_SYSTEM_NAME);
-    const DofMap& U_dof_map = U_system.get_dof_map();
-    std::vector<std::vector<unsigned int> > U_dof_indices(NDIM);
-    FEType U_fe_type = U_dof_map.variable_type(0);
-    for (unsigned int d = 0; d < NDIM; ++d)
-    {
-        TBOX_ASSERT(U_dof_map.variable_type(d) == U_fe_type);
-    }
-    System& X_system = es.get_system(IIMethod::COORDS_SYSTEM_NAME);
-    const DofMap& X_dof_map = X_system.get_dof_map();
-    std::vector<std::vector<unsigned int> > X_dof_indices(NDIM);
-    FEType X_fe_type = X_dof_map.variable_type(0);
-    for (unsigned int d = 0; d < NDIM; ++d)
-    {
-        TBOX_ASSERT(X_dof_map.variable_type(d) == X_fe_type);
-        TBOX_ASSERT(X_dof_map.variable_type(d) == U_fe_type);
-    }
-    std::vector<unsigned int> vars(NDIM);
-    for (unsigned int d = 0; d < NDIM; ++d) vars[d] = d;
-
-    libMesh::UniquePtr<FEBase> fe_F(FEBase::build(dim, F_fe_type));
-    libMesh::UniquePtr<FEBase> fe_X(FEBase::build(dim, X_fe_type));
-    QGauss qrule(dim, FIFTH);
-    fe_F->attach_quadrature_rule(&qrule);
-    fe_X->attach_quadrature_rule(&qrule);
-    const std::vector<Real>& JxW = fe_F->get_JxW();
-    const std::vector<libMesh::Point>& q_point = fe_F->get_xyz();
-    const std::vector<std::vector<Real> >& phi_F = fe_F->get_phi();
-    const std::vector<std::vector<Real> >& phi_X = fe_X->get_phi();
-
-    es.parameters.set<Real>("dt") = dt;
-    F_system.assemble_before_solve = false;
-    F_system.assemble();
-
-    NumericVector<double>* F_rhs_vec = F_system.rhs;
-    F_rhs_vec->zero();
-    std::vector<DenseVector<double> > F_rhs_e(NDIM);
-    VectorValue<double> F_qp, U_qp, X_qp, x_qp;
-    VectorValue<double> F_oo, U_oo;
-    boost::multi_array<double, 2> F_node, U_node, x_node;
-    const MeshBase::const_element_iterator el_begin = mesh.active_local_elements_begin();
-    const MeshBase::const_element_iterator el_end = mesh.active_local_elements_end();
-    for (MeshBase::const_element_iterator el_it = el_begin; el_it != el_end; ++el_it)
-    {
-        Elem* const elem = *el_it;
-        for (unsigned int d = 0; d < NDIM; ++d)
-        {
-            F_dof_map.dof_indices(elem, F_dof_indices[d], d);
-            U_dof_map.dof_indices(elem, U_dof_indices[d], d);
-            X_dof_map.dof_indices(elem, X_dof_indices[d], d);
-            F_rhs_e[d].resize(static_cast<int>(F_dof_indices[d].size()));
-        }
-        fe_F->reinit(elem);
-        fe_X->reinit(elem);
-        get_values_for_interpolation(F_node,
-                                     *F_system.current_local_solution,
-                                     F_dof_indices); // XXXX: THIS NEEDS TO BE THE REAL CURRENT SOLUTION!
-        get_values_for_interpolation(U_node, *U_system.current_local_solution, U_dof_indices);
-        get_values_for_interpolation(x_node, *X_system.current_local_solution, X_dof_indices);
-        for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
-        {
-            const libMesh::Point& X_qp = q_point[qp];
-            interpolate(F_qp, qp, F_node, phi_F);
-            interpolate(U_qp, qp, U_node, phi_X);
-            interpolate(x_qp, qp, x_node, phi_X);
-            F_oo = kappa * (X_qp - x_qp) - eta * U_qp;
-            for (unsigned int i = 0; i < phi_F.size(); i++)
-            {
-                for (unsigned int d = 0; d < NDIM; ++d)
-                {
-                    F_rhs_e[d](i) += (F_qp(d) + (tau / dt) * F_oo(d)) * phi_F[i][qp] * JxW[qp];
-                }
-            }
-        }
-        for (unsigned int d = 0; d < NDIM; ++d)
-        {
-            F_dof_map.constrain_element_vector(F_rhs_e[d], F_dof_indices[d]);
-            F_rhs_vec->add_vector(F_rhs_e[d], F_dof_indices[d]);
-        }
-    }
-    F_rhs_vec->close();
-    F_system.solution->close();
-
-    pout << "about to solve for F!\n";
-    F_system.solve();
-    F_system.solution->close();
-    F_system.solution->localize(*F_system.current_local_solution);
-    pout << "F_rhs norm = " << F_rhs_vec->l2_norm() << "\n";
-    pout << "F norm = " << F_system.solution->l2_norm() << "\n";
-}
 
 void
 postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
