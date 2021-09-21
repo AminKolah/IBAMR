@@ -1,18 +1,19 @@
 // physical parameters
-Re = 260.0
+Re = 200.0
 MU = 1.0/Re
 RHO = 1.0
 U_MAX = 2.0
 // grid spacing parameters
-L = 60.0 //60.0                                       // width of computational domain
+L = 16.0 //60.0                                       // width of computational domain
 MAX_LEVELS = 6                                 // maximum number of levels in locally refined grid
 REF_RATIO  = 2                                 // refinement ratio between levels
-N = 128                                         // actual    number of grid cells on coarsest grid level
+N = 16                                         // actual    number of grid cells on coarsest grid level
 NFINEST = (REF_RATIO^(MAX_LEVELS - 1))*N       // effective number of grid cells on finest   grid level
 DX0 = L/N                                      // mesh width on coarsest grid level
 DX  = L/NFINEST                                // mesh width on finest   grid level
 MFAC = 2.0                                     // ratio of Lagrangian mesh width to Cartesian mesh width
 ELEM_TYPE = "HEX8"                            // type of element to use for structure discretization
+
 
 // solver parameters
 IB_DELTA_FUNCTION          = "IB_3"            // the type of smoothed delta function to use for Lagrangian-Eulerian interaction
@@ -23,7 +24,7 @@ USE_VELOCITY_JUMP_CONDITIONS        = TRUE           // whether to impose pressu
 WSS_CALC_WIDTH = 1.05
 P_CALC_WIDTH = 1.5
 COMPUTE_FLUID_TRACTION = TRUE
-USE_CONSISTENT_MASS_MATRIX = TRUE          // whether to use a consistent or lumped mass matrix
+USE_CONSISTENT_MASS_MATRIX = TRUE
 IB_POINT_DENSITY           = 4.0               // approximate density of IB quadrature points for Lagrangian-Eulerian interaction
 SOLVER_TYPE                = "STAGGERED"       // the fluid solver to use (STAGGERED or COLLOCATED)
 START_TIME                 = 0.0e0             // initial simulation time
@@ -47,10 +48,10 @@ OUTPUT_DIV_U               = TRUE
 ENABLE_LOGGING             = TRUE
 
 // model parameters
-NUM_CYCLES = 5
-KAPPA_S =1500 // 0.05*DX/DT^2 //0.0183*DX/DT^2 // 7.5*DX/DT^2
+NUM_CYCLES = 1
+KAPPA_S = 450
 ETA_S = 0.0 //1.5*DX/DT
-TAU_S = 20*DT
+
 // collocated solver parameters
 PROJECTION_METHOD_TYPE = "PRESSURE_UPDATE"
 SECOND_ORDER_PRESSURE_UPDATE = TRUE
@@ -235,9 +236,9 @@ Main {
 }
 
 CartesianGeometry {
-   domain_boxes = [ (0,0,0),(N - 1,N - 1,N - 1) ]
-   x_lo = -0.25*L,-0.5*L,-0.5*L
-   x_up =  0.75*L, 0.5*L, 0.5*L
+   domain_boxes = [ (0,0,0),(2*N - 1,N - 1,N - 1) ]
+   x_lo = -0.5*L,-0.5*L,-0.5*L
+   x_up =  1.5*L, 0.5*L, 0.5*L
    periodic_dimension = 0,0,0
 }
 
@@ -254,7 +255,7 @@ GriddingAlgorithm {
       level_0 = 512,512,512  // all finer levels will use same values as level_0
    }
    smallest_patch_size {
-      level_0 =   32,  32,  32  // all finer levels will use same values as level_0
+      level_0 =   16,  16,  16  // all finer levels will use same values as level_0
    }
    efficiency_tolerance = 0.80e0  // min % of tag cells in new patch level
    combine_efficiency   = 0.80e0  // chop box if sum of volumes of smaller boxes < efficiency * vol of large box
@@ -276,4 +277,3 @@ TimerManager{
 
    timer_list = "IBAMR::*::*","IBTK::*::*","*::*::*"
 }
- 
