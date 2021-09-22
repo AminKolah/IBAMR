@@ -193,7 +193,7 @@ Main {
    restart_dump_dirname        = "restart_IIM2d"
 
 // hierarchy data dump parameters
-   data_dump_interval          = 1
+   data_dump_interval          = 0
    data_dump_dirname           = "hier_data_IIM2d"
 
 // timer dump parameters
