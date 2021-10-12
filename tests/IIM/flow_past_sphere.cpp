@@ -32,6 +32,7 @@
 #include <ibamr/INSCollocatedHierarchyIntegrator.h>
 #include <ibamr/INSStaggeredHierarchyIntegrator.h>
 #include <ibtk/AppInitializer.h>
+#include <ibtk/IBTK_MPI.h>
 #include <ibtk/LEInteractor.h>
 #include <ibtk/libmesh_utilities.h>
 #include <ibtk/muParserCartGridFunction.h>
@@ -72,7 +73,8 @@ tether_force_function(VectorValue<double>& F,
 using namespace ModelData;
 
 // Function prototypes
-static ofstream c1_force_stream, c2_force_stream, c3_force_stream, c1_traction_stream, c2_traction_stream, c3_traction_stream, U_L1_norm_stream, U_L2_norm_stream, U_max_norm_stream;
+static ofstream force_coeff_stream;
+
 void postprocess_data(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                       Pointer<INSHierarchyIntegrator> navier_stokes_integrator,
                       Mesh& mesh,
@@ -137,7 +139,6 @@ main(int argc, char* argv[])
         const double dx = input_db->getDouble("DX");
         const double mfac = input_db->getDouble("MFAC");
         const double ds = mfac * dx;
-        const double DT = input_db->getDouble("DT");
         string elem_type = input_db->getString("ELEM_TYPE");
         const double R = 0.5;
         if (NDIM == 2 && (elem_type == "TRI3" || elem_type == "TRI6"))
@@ -346,24 +347,9 @@ main(int argc, char* argv[])
         // velocity.
         if (SAMRAI_MPI::getRank() == 0)
         {
-            
-            c1_force_stream.open("C1_3D_force.curve", ios_base::out | ios_base::trunc);
-            c2_force_stream.open("C2_3D_force.curve", ios_base::out | ios_base::trunc);
-            c3_force_stream.open("C3_3D_force.curve", ios_base::out | ios_base::trunc);
-            c1_force_stream.precision(10);
-            c2_force_stream.precision(10);
-            c3_force_stream.precision(10);
-            
-            
-            c1_traction_stream.open("C1_3D_traction.curve", ios_base::out | ios_base::trunc);
-            c2_traction_stream.open("C2_3D_traction.curve", ios_base::out | ios_base::trunc);
-            c3_traction_stream.open("C3_3D_traction.curve", ios_base::out | ios_base::trunc); 
-
-            c1_traction_stream.precision(10);
-            c2_traction_stream.precision(10);
-            c3_traction_stream.precision(10);
+            force_coeff_stream.open("output");
         }
-
+        
         // Main time step loop.
         double loop_time_end = time_integrator->getEndTime();
         double dt = 0.0;
@@ -428,15 +414,7 @@ main(int argc, char* argv[])
         // Close the logging streams.
         if (SAMRAI_MPI::getRank() == 0)
         {
-            c1_force_stream.close();
-            c2_force_stream.close();
-            c3_force_stream.close();
-            
-            
-            c1_traction_stream.close();
-            c2_traction_stream.close();
-            c3_traction_stream.close();
-
+            force_coeff_stream.close();
         }
 
         // Cleanup Eulerian boundary condition specification objects (when
@@ -541,18 +519,13 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
     SAMRAI_MPI::sumReduction(T_integral, NDIM);
 
     static const double D = 1.0;
-    if (SAMRAI_MPI::getRank() == 0)
-    {
-        c1_force_stream << loop_time << " " << 2.0 * -F_integral[0] / (0.25 * D * D * M_PI) << endl;
-        c2_force_stream << loop_time << " " << 2.0 * -F_integral[1] / (0.25 * D * D * M_PI) << endl;
-        c3_force_stream << loop_time << " " << 2.0 * -F_integral[2] / (0.25 * D * D * M_PI) << endl;
-        
-        c1_traction_stream << loop_time << " " << 2.0 * T_integral[0] / (0.25 * D * D * M_PI) << endl;
-        c2_traction_stream << loop_time << " " << 2.0 * T_integral[1] / (0.25 * D * D * M_PI) << endl;
-        c3_traction_stream << loop_time << " " << 2.0 * T_integral[2] / (0.25 * D * D * M_PI) << endl;
-        
-        
-    }
+    
+    // Output components of force and traction coefficients "
+    force_coeff_stream.precision(12);
+                force_coeff_stream.setf(ios::fixed, ios::floatfield);
+                force_coeff_stream << loop_time << "\t" << 2.0 * -F_integral[0] / (0.25 * D * D * M_PI) << "\t" << 2.0 * -F_integral[1] / (0.25 * D * D * M_PI) << "\t"
+                           << 2.0 * -F_integral[2] / (0.25 * D * D * M_PI) << "\t" << 2.0 * T_integral[0] / (0.25 * D * D * M_PI) << "\t" 
+                           << 2.0 * T_integral[1] / (0.25 * D * D * M_PI) << "\t" << 2.0 * T_integral[2] / (0.25 * D * D * M_PI) << endl;
  
     return;
 } // postprocess_data

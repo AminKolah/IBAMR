@@ -113,7 +113,7 @@ void tether_body_force_function_thin(VectorValue<double>& F,
 }
 using namespace ModelData;
 
-static ofstream  p_L2_norm_stream, p_max_norm_stream;
+static ofstream  p_norm_stream;
 
 void postprocess_data(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                       Pointer<INSHierarchyIntegrator> navier_stokes_integrator,
@@ -430,13 +430,7 @@ int main(int argc, char* argv[])
         // velocity.
         if (SAMRAI_MPI::getRank() == 0)
         {
- 
-            p_L2_norm_stream.open("p_L2_II_" + std::to_string(dx) +"_theta_" + std::to_string(double(theta)) +".curve", ios_base::out | ios_base::trunc);
-            p_max_norm_stream.open("p_max_II_" + std::to_string(dx) +"_theta_" + std::to_string(double(theta)) +".curve", ios_base::out | ios_base::trunc);
-
-            
-           p_L2_norm_stream.precision(10);
-           p_max_norm_stream.precision(10);
+			p_norm_stream.open("output");
         }
         
         // Main time step loop.
@@ -617,8 +611,7 @@ int main(int argc, char* argv[])
         
         if (SAMRAI_MPI::getRank() == 0)
         {
-            p_L2_norm_stream.close();
-            p_max_norm_stream.close();
+            p_norm_stream.close();
 
         }
         
@@ -1159,10 +1152,7 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
          
 		if (SAMRAI_MPI::getRank() == 0)
 		{
-			p_L2_norm_stream << loop_time << " " << P_L2_norm << endl;
-			p_max_norm_stream << loop_time << " " << P_max_norm << endl;
-
-			
+			p_norm_stream << loop_time << "\t" << P_L2_norm << "\t" << P_max_norm <<endl;			
 		}
          
     }
