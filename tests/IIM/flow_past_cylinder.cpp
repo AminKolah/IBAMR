@@ -120,7 +120,7 @@ tether_force_function(VectorValue<double>& F,
 using namespace ModelData;
 
 // Function prototypes
-static ofstream drag_force_stream, lift_force_stream, drag_traction_stream, lift_traction_stream, lag_quantities_stream;
+static ofstream force_coeff_stream;
 void postprocess_data(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                       Pointer<INSHierarchyIntegrator> navier_stokes_integrator,
                       Mesh& mesh,
@@ -189,7 +189,6 @@ main(int argc, char* argv[])
         const double mfac = input_db->getDouble("MFAC");
         ds = mfac * dx;
 
-        const double LL = input_db->getDouble("MAX_LEVELS");
         string elem_type = input_db->getString("ELEM_TYPE");
         R = input_db->getDouble("R");
         if (NDIM == 2 && (elem_type == "TRI3" || elem_type == "TRI6"))
@@ -412,27 +411,8 @@ main(int argc, char* argv[])
         // velocity.
         if (SAMRAI_MPI::getRank() == 0)
         {
-            
-            drag_traction_stream.open("CD_dbg_traction_eta_s__" + std::to_string(double(eta_s)) +"_kappa_" + std::to_string(double(kappa_s)) +"_MaxLevel.curve", ios_base::out | ios_base::trunc);
-            lift_traction_stream.open("CL_dbg_traction_eta_s__" + std::to_string(double(eta_s)) +"_kappa_" + std::to_string(double(kappa_s)) +"_MaxLevel.curve", ios_base::out | ios_base::trunc);
-            
-         
-            drag_force_stream.open("CD_dbg_Force_eta_s__" + std::to_string(double(eta_s)) +"_kappa_" + std::to_string(double(kappa_s)) +"_MaxLevel_" + std::to_string(int(LL)) +".curve", ios_base::out | ios_base::trunc);
-            lift_force_stream.open("CL_dbg_Force_eta_s__" + std::to_string(double(eta_s)) +"_kappa_" + std::to_string(double(kappa_s)) +"_MaxLevel_" + std::to_string(int(LL)) +".curve", ios_base::out | ios_base::trunc);
-            
-            lag_quantities_stream.open("Lag_dbg_variables_eta_s_" + std::to_string(double(eta_s)) +"_kappa_s_" + std::to_string(int(kappa_s)) +"_MaxLevel_" + std::to_string(int(LL)) +".curve", ios_base::out | ios_base::trunc);
-
-
-            drag_force_stream.precision(10);
-            lift_force_stream.precision(10);
-
-            drag_traction_stream.precision(10);
-            lift_traction_stream.precision(10);
-            
-            lag_quantities_stream.precision(10);
-
+            force_coeff_stream.open("output");
         }
-        
         
 
         // Main time step loop.
@@ -491,21 +471,13 @@ main(int argc, char* argv[])
                 TimerManager::getManager()->print(plog);
             }
 
-            VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
-            const Pointer<hier::Variable<NDIM> > p_var = time_integrator->getPressureVariable();
-			const Pointer<VariableContext> p_ctx = time_integrator->getCurrentContext();
-			const int p_idx = var_db->mapVariableAndContextToIndex(p_var, p_ctx);
 			
         }
 
         // Close the logging streams.
         if (SAMRAI_MPI::getRank() == 0)
         {
-            drag_traction_stream.close();
-            lift_traction_stream.close();
-            drag_force_stream.close();
-            lift_force_stream.close();
-            lag_quantities_stream.close();
+            force_coeff_stream.close();
         }
 
         // Cleanup Eulerian boundary condition specification objects (when
@@ -560,11 +532,9 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
     UniquePtr<QBase> qrule = QBase::build(QGAUSS, dim, SEVENTH);
     fe->attach_quadrature_rule(qrule.get());
     const vector<double>& JxW = fe->get_JxW();
-    const vector<libMesh::Point>& q_point = fe->get_xyz();
     const vector<vector<double> >& phi = fe->get_phi();
     const vector<vector<VectorValue<double> > >& dphi = fe->get_dphi();
-    const std::vector<std::vector<double> >& dphi_dxi = fe->get_dphidxi();
-    const std::vector<std::vector<double> >& dphi_deta = fe->get_dphideta();
+
 
     std::vector<double> U_qp_vec(NDIM);
     std::vector<const std::vector<double>*> var_data(1);
@@ -619,119 +589,14 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
     SAMRAI_MPI::sumReduction(T_integral, NDIM);
 
 
-    {
- 
-        System& U_system = equation_systems->get_system<System>(IIMethod::VELOCITY_SYSTEM_NAME);
-		System& WSS_system = equation_systems->get_system<System>(IIMethod::WSS_OUT_SYSTEM_NAME);
-		System& P_o_system = equation_systems->get_system<System>(IIMethod::PRESSURE_OUT_SYSTEM_NAME);
-		System& P_j_system = equation_systems->get_system<System>(IIMethod::PRESSURE_JUMP_SYSTEM_NAME);
-		
-        NumericVector<double>* U_vec = U_system.solution.get();
-        NumericVector<double>* U_ghost_vec = U_system.current_local_solution.get();
-        U_vec->localize(*U_ghost_vec);
-        DofMap& U_dof_map = U_system.get_dof_map();
-        std::vector<std::vector<unsigned int> > U_dof_indices(NDIM);
-        
-
-        NumericVector<double>* WSS_vec = WSS_system.solution.get();
-        NumericVector<double>* WSS_ghost_vec = WSS_system.current_local_solution.get();
-        WSS_vec->localize(*WSS_ghost_vec);
-        DofMap& WSS_dof_map = WSS_system.get_dof_map();
-        std::vector<std::vector<unsigned int> > WSS_dof_indices(NDIM);
-        UniquePtr<FEBase> fe(FEBase::build(dim, WSS_dof_map.variable_type(0)));
-        
-        
-        
-        NumericVector<double>* P_o_vec = P_o_system.solution.get();
-        NumericVector<double>* P_o_ghost_vec = P_o_system.current_local_solution.get();
-        P_o_vec->localize(*P_o_ghost_vec);
-        DofMap& P_o_dof_map = P_o_system.get_dof_map();
-         std::vector<unsigned int> P_o_dof_indices;
-		
-        NumericVector<double>* P_j_vec = P_j_system.solution.get();
-        NumericVector<double>* P_j_ghost_vec = P_j_system.current_local_solution.get();
-        P_j_vec->localize(*P_j_ghost_vec);
-        DofMap& P_j_dof_map = P_j_system.get_dof_map();
-        std::vector<unsigned int> P_j_dof_indices;
-   
-
-		
-		VectorValue<double> U_qp, WSS_qp;
-        double  P_o_qp,P_j_qp;
-        VectorValue<double> tau1, tau2,n;
-        int qp_tot = 0;
-        boost::multi_array<double, 2> U_node, WSS_node;
-        boost::multi_array<double, 2> X_node;
-         boost::multi_array<double, 1> P_o_node, P_j_node;
-        const MeshBase::const_element_iterator el_begin = mesh.active_local_elements_begin();
-        const MeshBase::const_element_iterator el_end = mesh.active_local_elements_end();
-        for (MeshBase::const_element_iterator el_it = el_begin; el_it != el_end; ++el_it)
-        {
-            Elem* const elem = *el_it;
-            // fe->reinit(elem);
-            for (unsigned int d = 0; d < NDIM; ++d)
-            {
-				dof_map.dof_indices(elem, dof_indices[d], d);
-                U_dof_map.dof_indices(elem, U_dof_indices[d], d);
-                WSS_dof_map.dof_indices(elem, WSS_dof_indices[d], d);
-                
-            }
-            P_j_dof_map.dof_indices(elem, P_j_dof_indices);
-            P_o_dof_map.dof_indices(elem, P_o_dof_indices);
-            const int n_qp = qrule->n_points();
-            get_values_for_interpolation(U_node, *U_ghost_vec, U_dof_indices);
-            get_values_for_interpolation(WSS_node, *WSS_ghost_vec, WSS_dof_indices);
-            get_values_for_interpolation(P_j_node, *P_j_ghost_vec, P_j_dof_indices);
-            get_values_for_interpolation(P_o_node, *P_o_ghost_vec, P_o_dof_indices);
-			get_values_for_interpolation(x_node, *x_ghost_vec, dof_indices);
-			get_values_for_interpolation(X_node, X0_vec, dof_indices);
-				
-			
-            for (int qp = 0; qp < n_qp; ++qp)
-            {
-
-				interpolate(x_qp, qp, x_node, phi);
-				interpolate(X, qp, X_node, phi);
-                interpolate(U_qp, qp, U_node, phi);
-                interpolate(WSS_qp, qp, WSS_node, phi);
-                interpolate(P_o_qp, qp, P_o_node, phi);
-                  interpolate(P_j_qp, qp, P_j_node, phi);
-
-                interpolate(&tau1(0), qp, x_node, dphi_dxi);
-
-                  tau2 = VectorValue<double>(0.0, 0.0, 1.0);
-
-                    n = tau1.cross(tau2);
-                    n = n.unit();
-					
-                    libMesh::Point X = q_point[qp];
-
-					qp_tot += 1;
-					
-				    if (SAMRAI_MPI::getRank() == 0)
-					{
-					  lag_quantities_stream << std::abs(X(0)-x_qp(0)) << " " << std::abs(X(1)-x_qp(1)) << " " << U_qp(0) << " " << U_qp(1) << " "<< P_o_qp << " " << WSS_qp(0) << " " << WSS_qp(1) << " " << endl;
-					
-					}	
-
-			}
-		}
-		
-
-
-         
-    }
-    static const double rho = 1.0;
-    static const double U_max = 1.0;
     static const double D = 1.0;
     if (SAMRAI_MPI::getRank() == 0)
     {
-        drag_force_stream << loop_time << " " << -F_integral[0] / (0.5 * rho * U_max * U_max * D) << endl;
-        lift_force_stream << loop_time << " " << -F_integral[1] / (0.5 * rho * U_max * U_max * D) << endl;
-        
-        drag_traction_stream << loop_time << " " << T_integral[0] / (0.5 * rho * U_max * U_max * D) << endl;
-        lift_traction_stream << loop_time << " " << T_integral[1] / (0.5 * rho * U_max * U_max * D) << endl;
-        
+    force_coeff_stream.precision(12);
+                force_coeff_stream.setf(ios::fixed, ios::floatfield);
+                force_coeff_stream << loop_time << "\t" << 2.0 * -F_integral[0] / (0.25 * D * D * M_PI) << "\t" << 2.0 * -F_integral[1] / (0.25 * D * D * M_PI) << "\t"
+                           << 2.0 * T_integral[0] / (0.25 * D * D * M_PI) << "\t" << 2.0 * T_integral[1] / (0.25 * D * D * M_PI) << endl;
+ 
     }
 
     return;
