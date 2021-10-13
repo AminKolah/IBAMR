@@ -432,13 +432,9 @@ int main(int argc, char* argv[])
             }
         }
 
-                if (SAMRAI_MPI::getRank() == 0)
+        if (SAMRAI_MPI::getRank() == 0)
         {
-            
-            flow_rate_stream.open("flow_rate_outflow_kappa_" + std::to_string(int(kappa_s_thin)) +"_eta_" + std::to_string(int(eta_s_thin)) +".curve", ios_base::out | ios_base::trunc);
-            flow_rate_stream.precision(10);
-  
-
+            flow_rate_stream.open("output");
         }
         // Main time step loop.
 
@@ -1239,14 +1235,15 @@ void compute_flow_rate(const double dt,
         }
     }
     SAMRAI_MPI::sumReduction(&qsrc[0], 2);
-    
-        if (SAMRAI_MPI::getRank() == 0)
+
+    if (SAMRAI_MPI::getRank() == 0)
     {
+        flow_rate_stream.precision(12);
+        flow_rate_stream.setf(ios::fixed, ios::floatfield);
         flow_rate_stream << loop_time << " " << qsrc[0] <<" " << qsrc[1] << endl;
    
     }
     
-    pout << " Qi = " << qsrc[0] << " Qo = " << qsrc[1] <<"\n\n";
     
 }
 

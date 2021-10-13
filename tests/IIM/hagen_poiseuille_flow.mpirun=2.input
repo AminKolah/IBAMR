@@ -238,8 +238,9 @@ IIMethod {
    IB_point_density           = IB_POINT_DENSITY
    p_calc_width				   = P_CALC_WIDTH
    wss_calc_width			  = WSS_CALC_WIDTH
-   enable_logging_solver_iterations = FALSE
    min_ghost_cell_width = 6
+   enable_logging_solver_iterations = FALSE
+
 }
 
 

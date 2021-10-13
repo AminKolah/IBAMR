@@ -522,10 +522,13 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
     
     // Output components of force and traction coefficients "
     force_coeff_stream.precision(12);
-                force_coeff_stream.setf(ios::fixed, ios::floatfield);
-                force_coeff_stream << loop_time << "\t" << 2.0 * -F_integral[0] / (0.25 * D * D * M_PI) << "\t" << 2.0 * -F_integral[1] / (0.25 * D * D * M_PI) << "\t"
-                           << 2.0 * -F_integral[2] / (0.25 * D * D * M_PI) << "\t" << 2.0 * T_integral[0] / (0.25 * D * D * M_PI) << "\t" 
-                           << 2.0 * T_integral[1] / (0.25 * D * D * M_PI) << "\t" << 2.0 * T_integral[2] / (0.25 * D * D * M_PI) << endl;
- 
+    force_coeff_stream.setf(ios::fixed, ios::floatfield);
+    force_coeff_stream << loop_time << "\t" << 2.0 * -F_integral[0] / (0.25 * D * D * M_PI) << "\t"
+                       << 2.0 * -F_integral[1] / (0.25 * D * D * M_PI) << "\t"
+                       << 2.0 * -F_integral[2] / (0.25 * D * D * M_PI) << "\t"
+                       << 2.0 * T_integral[0] / (0.25 * D * D * M_PI) << "\t"
+                       << 2.0 * T_integral[1] / (0.25 * D * D * M_PI) << "\t"
+                       << 2.0 * T_integral[2] / (0.25 * D * D * M_PI) << endl;
+
     return;
 } // postprocess_data

@@ -1,7 +1,9 @@
 //  2016-2021, created by Ebrahim (Amin) Kolahdouz
 // Fully developed flow in a 2D (slanted) channel
-// See Sec. 4.1.1 of "An immersed interface method for discrete surfaces" 
+// See Sec. 4.1.1 of "An immersed interface method for discrete surfaces"
 //  by Ebrahim M. Kolahdouz et al., Journal of Computational Physics 400 (2020) 108854
+// This code was run with a tight solver/preconditioner tolerance
+// through the command line flag: -stokes_ksp_rtol 1.0e-10 -ksp_rtol 1.0e-10
 
 // This code was tested against the commit 57fb379454ea3f8f50c476f10226cb6b520a11a0
 // which is currently on branch iim-1 at https://github.com/drwells/IBAMR
@@ -146,7 +148,8 @@ void compute_pressure_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
  *    executable <input file name> <restart directory> <restart number>        *
  *                                                                             *
  *******************************************************************************/
-int main(int argc, char* argv[])
+int
+main(int argc, char* argv[])
 {
     // Initialize libMesh, PETSc, MPI, and SAMRAI.
     LibMeshInit init(argc, argv);
@@ -1152,7 +1155,9 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
          
 		if (SAMRAI_MPI::getRank() == 0)
 		{
-			p_norm_stream << loop_time << "\t" << P_L2_norm << "\t" << P_max_norm <<endl;			
+                    p_norm_stream.precision(12);
+                    p_norm_stream.setf(ios::fixed, ios::floatfield);
+                    p_norm_stream << loop_time << "\t" << P_L2_norm << "\t" << P_max_norm << endl;			
 		}
          
     }

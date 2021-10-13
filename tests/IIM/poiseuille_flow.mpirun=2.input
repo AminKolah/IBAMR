@@ -32,14 +32,13 @@ FEEDBACK_FORCER = FALSE
 
 // solver parameters
 IB_DELTA_FUNCTION          = "IB_3"            // the type of smoothed delta function to use for Lagrangian-Eulerian interaction
-SPLIT_NORMAL_FORCES        = TRUE           // whether to split interior and boundary forces
-SPLIT_TANGENTIAL_FORCES	   = TRUE
+SPLIT_FORCES               = TRUE             // whether to split interior and boundary forces
 USE_PRESSURE_JUMP_CONDITIONS        = TRUE           // whether to impose pressure jumps at fluid-structure interfaces
 USE_VELOCITY_JUMP_CONDITIONS        = TRUE           // whether to impose pressure jumps at fluid-structure interfaces
 WSS_CALC_WIDTH 			   = 1.05
 P_CALC_WIDTH 			   = 1.2
 USE_CONSISTENT_MASS_MATRIX = TRUE              // whether to use a consistent or lumped mass matrix
-IB_POINT_DENSITY           = 4.0                    // approximate density of IB quadrature points for Lagrangian-Eulerian interaction
+IB_POINT_DENSITY           = 4                    // approximate density of IB quadrature points for Lagrangian-Eulerian interaction
 SOLVER_TYPE                = "STAGGERED"            // the fluid solver to use (STAGGERED or COLLOCATED)
 CFL_MAX                    = 0.10                   // maximum CFL number
 DT       				   = 0.5*CFL_MAX*DX  
@@ -190,8 +189,7 @@ IBHierarchyIntegrator {
 
 IIMethod {
    IB_delta_fcn               = IB_DELTA_FUNCTION
-   split_normal_force          = SPLIT_NORMAL_FORCES
-   split_tangential_force      = SPLIT_TANGENTIAL_FORCES
+   split_forces                = SPLIT_FORCES
    use_pressure_jump_conditions        = USE_PRESSURE_JUMP_CONDITIONS
    use_velocity_jump_conditions = USE_VELOCITY_JUMP_CONDITIONS
    use_consistent_mass_matrix = USE_CONSISTENT_MASS_MATRIX
@@ -199,6 +197,8 @@ IIMethod {
    p_calc_width				   = P_CALC_WIDTH
    wss_calc_width			  = WSS_CALC_WIDTH
    min_ghost_cell_width = 6
+   enable_logging_solver_iterations = FALSE
+
 }
 
 INSStaggeredHierarchyIntegrator {
@@ -223,14 +223,6 @@ INSStaggeredHierarchyIntegrator {
    output_Div_U                  = OUTPUT_DIV_U
    enable_logging                = ENABLE_LOGGING
    enable_logging_solver_iterations = FALSE
-
-   //convective_op_db {
-      //settings for STABILIZED_PPM convective operator
-      //width_0 = 4.0*DX
-      //width_1 = 4.0*DX
-      //width_2 = 4.0*DX
-      //width_3 = 4.0*DX
-   //}
 }
 
 Main {
@@ -242,16 +234,16 @@ Main {
 // visualization dump parameters
    viz_writer                  = "VisIt","ExodusII"
    viz_dump_interval           = -1
-   viz_dump_dirname            = "viz_IIM_straight"
+   viz_dump_dirname            = "viz_IIM_2d"
    visit_number_procs_per_file = 1
 
 // restart dump parameters
    restart_dump_interval       = 0
-   restart_dump_dirname        = "restart_IB2d_slanted"
+   restart_dump_dirname        = "restart_IIM_2d"
 
 // hierarchy data dump parameters
-   data_dump_interval          = 0 //int(5/DT)
-   data_dump_dirname           = "post_process_IIM_PBC_32_straight"
+   data_dump_interval          = 0
+   data_dump_dirname           = "post_process_IIM_2d"
 
 // timer dump parameters
    timer_dump_interval         = 0
@@ -302,4 +294,3 @@ TimerManager{
 
    timer_list = "IBAMR::*::*","IBTK::*::*","*::*::*"
 }
-
