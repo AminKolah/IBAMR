@@ -38,7 +38,23 @@ This is similar to how autotools is used with a separate build directory
 `build`. IBAMR's configuration scripts expect all dependencies to have their
 paths provided in the standard way for CMake (i.e., we pass in the root path of
 the directory for things installed outside the system search path). Here, for
-example, `PETSC_ROOT` is typically `$PETSC_DIR/$PETSC_ARCH`.
+example, `PETSC_ROOT` is typically `$PETSC_DIR/$PETSC_ARCH`. IBAMR's configuration
+script looks for each package in `PKG_ROOT`, where `PKG` is the all-caps version
+of the name: for example, CMake will look for boost in the directory specified
+by `BOOST_ROOT` and for muParser in the directory specified by `MUPARSER_ROOT`.
+
+Same packages have ambiguous capitalizations - IBAMR expects package names to be
+in `ALL_CAPS` (e.g., `PETSC_ROOT` and not `Petsc_ROOT`). Some aliases are also
+defined, mostly so that one can use the common CMake package names during
+configuration:
+- `BOOST_ROOT` and `Boost_ROOT` are equivalent
+- `EIGEN3_ROOT` and `Eigen3_ROOT` are equivalent
+- `LIBMESH_ROOT` and `libMesh_ROOT` are equivalent
+- `MUPARSER_ROOT` and `muParser_ROOT` are equivalent
+- `PETSC_ROOT` and `PETSc_ROOT` are equivalent
+
+though inside IBAMR's build system the `ALL_CAPS` names are used.
+
 ```
 mkdir build
 cd build
@@ -46,10 +62,12 @@ cmake -DCMAKE_C_FLAGS="-O3 -march=native"                     \
       -DCMAKE_CXX_FLAGS="-O3 -march=native"                   \
       -DCMAKE_Fortran_FLAGS="-O3 -march=native"               \
       -DCMAKE_INSTALL_PREFIX=$HOME/Applications/ibamr         \
+      -DIBAMR_ENABLE_TESTING=OFF                              \
       -DSAMRAI_ROOT=$HOME/Applications/samrai-2.4.4           \
       -DLIBMESH_ROOT=$HOME/Applications/libmesh-dev           \
       -DLIBMESH_METHOD=OPT                                    \
       -DPETSC_ROOT=$HOME/Applications/petsc-3.13.0/x86_64-opt \
+      -DMUPARSER_ROOT=$HOME/Applications/muParser-2.3.2/      \
       ../
 make -j6
 make -j6 install
@@ -66,7 +84,13 @@ IBAMR requires
 
 Of these, Boost, Eigen3, and muParser are also bundled with IBAMR and IBAMR will
 build its own copies of those libraries if it cannot find working externally
-available versions.
+available versions. If you wish to use the bundled version of one of these
+libraries instead of one found at either system or specified search locations,
+then you can specify that as well by passing any of
+- `-DIBAMR_FORCE_BUNDLED_BOOST=ON`
+- `-DIBAMR_FORCE_BUNDLED_EIGEN3=ON`
+- `-DIBAMR_FORCE_BUNDLED_MUPARSER=ON`
+as options to CMake.
 
 The CMake build system will attempt to find these with default search paths and
 also in the directory provided by `PKG_ROOT` (i.e., for Boost, the build system
@@ -92,6 +116,8 @@ harmless - the subsequent initial configuration run will just take a few more
 seconds.
 
 ### Configuring the build
+- The example call to CMake above disables tests. If you wish to compile the
+  tests then pass `-DIBAMR_ENABLE_TESTING=ON` instead.
 - If you want to build IBAMR with static libraries then pass the argument
   `-DBUILD_SHARED_LIBS=OFF` to the initial call to `cmake`. IBAMR defaults to
   building shared libraries.

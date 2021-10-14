@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //
-// Copyright (c) 2014 - 2020 by the IBAMR developers
+// Copyright (c) 2014 - 2021 by the IBAMR developers
 // All rights reserved.
 //
 // This file is part of IBAMR.
@@ -19,6 +19,8 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 #include <ibamr/config.h>
+
+#ifdef IBAMR_HAVE_LIBMESH
 
 #include "ibamr/FEMechanicsBase.h"
 #include "ibamr/IBFEDirectForcingKinematics.h"
@@ -1107,4 +1109,5 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
+#endif //#ifdef IBAMR_HAVE_LIBMESH
 #endif //#ifndef included_IBAMR_IBFEMethod

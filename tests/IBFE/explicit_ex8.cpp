@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //
-// Copyright (c) 2019 - 2020 by the IBAMR developers
+// Copyright (c) 2019 - 2021 by the IBAMR developers
 // All rights reserved.
 //
 // This file is part of IBAMR.
@@ -256,7 +256,7 @@ compute_inflow_flux(const Pointer<PatchHierarchy<NDIM> > hierarchy, const int U_
                 static const int side = 0;
                 if (pgeom->getTouchesRegularBoundary(axis, side))
                 {
-                    Vector n;
+                    IBTK::Vector n;
                     for (int d = 0; d < NDIM; ++d)
                     {
                         n[d] = axis == d ? +1.0 : 0.0;

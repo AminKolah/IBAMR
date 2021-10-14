@@ -41,10 +41,12 @@ public:
         : AdvDiffHierarchyIntegrator(std::move(object_name), input_db, true)
     {
     }
-    DummyAdvDiffIntegrator() = default;
+
     ~DummyAdvDiffIntegrator() = default;
-    void integrateHierarchy(double /*current_time*/, double /*new_time*/, int /*cycle_num*/ = 0) override
+
+    void integrateHierarchy(double current_time, double new_time, int cycle_num = 0) override
     {
+        HierarchyIntegrator::integrateHierarchy(current_time, new_time, cycle_num);
         return;
     }
 
@@ -71,7 +73,7 @@ protected:
     {
         plog << d_object_name << ": synchronizeHierarchyDataSpecialized()\n";
     }
-    void resetTimeDependentHierarchyDataSpecialized(const double new_time) override
+    void resetTimeDependentHierarchyDataSpecialized(const double /*new_time*/) override
     {
         plog << d_object_name << ": resetTimeDependentHierarchyDataSpecialized()\n";
     }
@@ -151,6 +153,11 @@ main(int argc, char* argv[])
 {
     // Initialize IBAMR and libraries. Deinitialization is handled by this object as well.
     IBTKInit ibtk_init(argc, argv, MPI_COMM_WORLD);
+
+#ifndef IBTK_HAVE_SILO
+    // Suppress warnings caused by running without silo
+    SAMRAI::tbox::Logger::getInstance()->setWarning(false);
+#endif
 
     { // cleanup dynamically allocated objects prior to shutdown
       // prevent a warning about timer initialization

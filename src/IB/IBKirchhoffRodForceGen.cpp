@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //
-// Copyright (c) 2014 - 2020 by the IBAMR developers
+// Copyright (c) 2014 - 2021 by the IBAMR developers
 // All rights reserved.
 //
 // This file is part of IBAMR.
@@ -516,7 +516,6 @@ IBKirchhoffRodForceGen::computeLagrangianForceAndTorque(Pointer<LData> F_data,
     IBTK_CHKERRQ(ierr);
 
     computeLagrangianBodyForce(F_data, hierarchy, level_number, data_time, l_data_manager);
-
 
     IBAMR_TIMER_STOP(t_compute_lagrangian_force_and_torque);
     return;

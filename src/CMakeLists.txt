@@ -148,7 +148,6 @@ SET(CXX_SRC
   IB/IBKirchhoffRodForceGen.cpp
   IB/IBAnchorPointSpec.cpp
   IB/IBImplicitStaggeredHierarchyIntegrator.cpp
-  IB/IBFECentroidPostProcessor.cpp
   IB/IBRedundantInitializer.cpp
   IB/IBAnchorPointSpecFactory.cpp
   IB/CIBStrategy.cpp
@@ -156,24 +155,17 @@ SET(CXX_SRC
   IB/IBFESurfaceMethod.cpp
   IB/IIMethod.cpp
   IB/IBInstrumentationSpecFactory.cpp
-  # This file is not yet finished
-  # IB/IBFEPatchRecoveryPostProcessor.cpp
-  IB/IBFEPostProcessor.cpp
   IB/BrinkmanPenalizationRigidBodyDynamics.cpp
   IB/CIBMobilitySolver.cpp
   IB/IBStrategy.cpp
   IB/IBTargetPointForceSpec.cpp
   IB/IBStrategySet.cpp
   IB/IBHierarchyIntegrator.cpp
-  IB/MaterialPointSpecFactory.cpp
   IB/IBInstrumentationSpec.cpp
-  IB/IBFEMethod.cpp
   IB/ConstraintIBMethod.cpp
   IB/IBEulerianSourceFunction.cpp
   IB/IBBeamForceSpecFactory.cpp
   IB/MobilityFunctions.cpp
-  IB/IMPMethod.cpp
-  IB/IMPInitializer.cpp
   IB/IBStandardForceGen.cpp
   IB/CIBStaggeredStokesOperator.cpp
   IB/Wall.cpp
@@ -181,24 +173,19 @@ SET(CXX_SRC
   IB/IBInterpolantMethod.cpp
   IB/IBEulerianForceFunction.cpp
   IB/NonbondedForceEvaluator.cpp
-  IB/IBFEInstrumentPanel.cpp
   IB/StaggeredStokesIBLevelRelaxationFACOperator.cpp
-  IB/MaterialPointSpec.cpp
   IB/KrylovFreeBodyMobilitySolver.cpp
   IB/IBSpringForceSpecFactory.cpp
   IB/ConstraintIBKinematics.cpp
   IB/IBLevelSetMethod.cpp
   IB/IBLagrangianForceStrategySet.cpp
   IB/IBRodForceSpec.cpp
-  IB/FEMechanicsBase.cpp
-  IB/FEMechanicsExplicitIntegrator.cpp
   IB/IBSourceSpec.cpp
   IB/IBSourceSpecFactory.cpp
   IB/CIBSaddlePointSolver.cpp
   IB/WallForceEvaluator.cpp
   IB/IBTargetPointForceSpecFactory.cpp
   IB/IBMethod.cpp
-  IB/IBFEDirectForcingKinematics.cpp
   IB/IBBeamForceSpec.cpp
   IB/IBSpringForceSpec.cpp
   IB/CIBMethod.cpp
@@ -218,7 +205,6 @@ SET(CXX_SRC
   advect/AdvectorPredictorCorrectorHyperbolicPatchOps.cpp
 
   # level set
-  level_set/FESurfaceDistanceEvaluator.cpp
   level_set/LSInitStrategy.cpp
   level_set/FastSweepingLSMethod.cpp
   level_set/RelaxationLSBcCoefs.cpp
@@ -226,6 +212,28 @@ SET(CXX_SRC
   utilities/RNG.cpp
   utilities/ConvectiveOperator.cpp
   )
+
+IF(${IBAMR_HAVE_LIBMESH})
+  LIST(APPEND CXX_SRC
+    IB/FEMechanicsBase.cpp
+    IB/FEMechanicsExplicitIntegrator.cpp
+    IB/IBFECentroidPostProcessor.cpp
+    IB/IBFEDirectForcingKinematics.cpp
+    IB/IBFEInstrumentPanel.cpp
+    IB/IBFEMethod.cpp
+    # This file is not yet finished
+    # IB/IBFEPatchRecoveryPostProcessor.cpp
+    IB/IBFEPostProcessor.cpp
+    IB/IBFESurfaceMethod.cpp
+    IB/IIMethod.cpp
+    IB/IMPInitializer.cpp
+    IB/IMPMethod.cpp
+    IB/MaterialPointSpec.cpp
+    IB/MaterialPointSpecFactory.cpp
+
+    level_set/FESurfaceDistanceEvaluator.cpp
+    )
+ENDIF()
 
 TARGET_SOURCES(IBAMR2d PRIVATE ${FORTRAN_GENERATED_SRC2D} ${CXX_SRC})
 TARGET_SOURCES(IBAMR3d PRIVATE ${FORTRAN_GENERATED_SRC3D} ${CXX_SRC})

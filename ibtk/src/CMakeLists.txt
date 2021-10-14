@@ -1,6 +1,6 @@
 ## ---------------------------------------------------------------------
 ##
-## Copyright (c) 2020 - 2020 by the IBAMR developers
+## Copyright (c) 2020 - 2021 by the IBAMR developers
 ## All rights reserved.
 ##
 ## This file is part of IBAMR.
@@ -115,6 +115,7 @@ SET(CXX_SRC
   refine_ops/CartSideDoubleRT0Refine.cpp
 
   # solvers
+  solvers/solver_utilities.cpp
   solvers/interfaces/FACPreconditionerStrategy.cpp
   solvers/interfaces/LinearOperator.cpp
   solvers/interfaces/JacobianOperator.cpp
@@ -224,10 +225,11 @@ ENDIF()
 TARGET_SOURCES(IBTK2d PRIVATE ${FORTRAN_GENERATED_SRC2D} ${CXX_SRC})
 TARGET_SOURCES(IBTK3d PRIVATE ${FORTRAN_GENERATED_SRC3D} ${CXX_SRC})
 
-# Include path to ibtk/config.h
+# Include path to ibtk/config.h - note that IBTKHeaders covers the normal header
+# locations both for building and installation
 TARGET_INCLUDE_DIRECTORIES(IBTK2d PUBLIC
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ibtk/include/>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/ibtk/>)
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/>)
 TARGET_INCLUDE_DIRECTORIES(IBTK3d PUBLIC
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ibtk/include/>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/>)

@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //
-// Copyright (c) 2014 - 2020 by the IBAMR developers
+// Copyright (c) 2014 - 2021 by the IBAMR developers
 // All rights reserved.
 //
 // This file is part of IBAMR.
@@ -21,10 +21,6 @@
 #include <ibtk/config.h>
 
 #include "ibtk/IndexUtilities.h"
-
-IBTK_DISABLE_EXTRA_WARNINGS
-#include <boost/math/special_functions/round.hpp>
-IBTK_ENABLE_EXTRA_WARNINGS
 
 #include <cmath>
 

@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //
-// Copyright (c) 2020 - 2020 by the IBAMR developers
+// Copyright (c) 2020 - 2021 by the IBAMR developers
 // All rights reserved.
 //
 // This file is part of IBAMR.
@@ -19,6 +19,8 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 #include <ibtk/config.h>
+
+#ifdef IBTK_HAVE_LIBMESH
 
 #include <libmesh/numeric_vector.h>
 
@@ -96,4 +98,5 @@ protected:
 };
 } // namespace IBTK
 
+#endif //#ifdef IBTK_HAVE_LIBMESH
 #endif

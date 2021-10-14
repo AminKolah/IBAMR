@@ -42,8 +42,14 @@
 
 namespace IBTK
 {
+/////////////////////////////// STATIC ///////////////////////////////////////
 namespace
 {
+// Timers.
+static Timer* t_reinit;
+static Timer* t_primary_to_secondary;
+static Timer* t_secondary_to_primary;
+
 /**
  * The secondary hierarchy is special in that we already know which cells it
  * should contain - i.e., we don't want to tag anything different than what is
@@ -130,6 +136,12 @@ SecondaryHierarchy::SecondaryHierarchy(std::string name,
       d_tag_strategy(std::unique_ptr<CopyRefinementTags>(new CopyRefinementTags())),
       d_eulerian_data_cache(std::make_shared<SAMRAIDataCache>())
 {
+    auto set_timer = [&](const char* name) { return tbox::TimerManager::getManager()->getTimer(name); };
+
+    IBTK_DO_ONCE(t_reinit = set_timer("IBTK::SecondaryHierarchy::reinit()");
+                 t_primary_to_secondary = set_timer("IBTK::SecondaryHierarchy::transferPrimaryToSecondary()");
+                 t_secondary_to_primary = set_timer("IBTK::SecondaryHierarchy::transferSecondaryToPrimary()");)
+
     // IBAMR consistently uses applyGradientDetector for everything so do that too
     Pointer<InputDatabase> database(new InputDatabase(d_object_name + ":: tag_db"));
     database->putString("tagging_method", "GRADIENT_DETECTOR");
@@ -157,6 +169,7 @@ SecondaryHierarchy::reinit(int coarsest_patch_level_number,
                            int finest_patch_level_number,
                            Pointer<PatchHierarchy<NDIM> > patch_hierarchy)
 {
+    IBTK_TIMER_START(t_reinit);
     d_coarsest_patch_level_number = coarsest_patch_level_number;
     d_finest_patch_level_number = finest_patch_level_number;
     d_primary_hierarchy = patch_hierarchy;
@@ -169,6 +182,7 @@ SecondaryHierarchy::reinit(int coarsest_patch_level_number,
                                                                            /*register_for_restart*/ false);
     d_eulerian_data_cache->setPatchHierarchy(d_secondary_hierarchy);
     d_eulerian_data_cache->resetLevels(0, finest_patch_level_number);
+    IBTK_TIMER_STOP(t_reinit);
 }
 
 void
@@ -177,6 +191,7 @@ SecondaryHierarchy::reinit(int coarsest_patch_level_number,
                            Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                            int workload_idx)
 {
+    IBTK_TIMER_START(t_reinit);
     d_coarsest_patch_level_number = coarsest_patch_level_number;
     d_finest_patch_level_number = finest_patch_level_number;
     d_primary_hierarchy = patch_hierarchy;
@@ -243,15 +258,18 @@ SecondaryHierarchy::reinit(int coarsest_patch_level_number,
         auto schedule = refine_algorithm->createSchedule("DEFAULT_FILL", new_level, old_level);
         schedule->fillData(0.0);
     }
+    IBTK_TIMER_STOP(t_reinit);
 }
 
-SAMRAI::xfer::RefineSchedule<NDIM>&
-SecondaryHierarchy::getPrimaryToSecondarySchedule(const int level_number,
-                                                  const int primary_data_idx,
-                                                  const int scratch_data_idx,
-                                                  SAMRAI::xfer::RefinePatchStrategy<NDIM>* patch_strategy)
+void
+SecondaryHierarchy::transferPrimaryToSecondary(const int level_number,
+                                               const int primary_data_idx,
+                                               const int scratch_data_idx,
+                                               const double data_time,
+                                               SAMRAI::xfer::RefinePatchStrategy<NDIM>* patch_strategy)
 {
     TBOX_ASSERT(d_secondary_hierarchy);
+    IBTK_TIMER_START(t_primary_to_secondary);
     const auto key = std::make_pair(level_number, std::make_pair(primary_data_idx, scratch_data_idx));
     if (d_transfer_forward_schedules.count(key) == 0)
     {
@@ -264,16 +282,19 @@ SecondaryHierarchy::getPrimaryToSecondarySchedule(const int level_number,
         d_transfer_forward_schedules[key] =
             refine_algorithm->createSchedule("DEFAULT_FILL", scratch_level, level, patch_strategy);
     }
-    return *d_transfer_forward_schedules[key];
-} // getPrimaryToSecondarySchedule
+    d_transfer_forward_schedules[key]->fillData(data_time);
+    IBTK_TIMER_STOP(t_primary_to_secondary);
+} // transferPrimaryToSecondary
 
-SAMRAI::xfer::RefineSchedule<NDIM>&
-SecondaryHierarchy::getSecondaryToPrimarySchedule(const int level_number,
-                                                  const int primary_data_idx,
-                                                  const int scratch_data_idx,
-                                                  SAMRAI::xfer::RefinePatchStrategy<NDIM>* patch_strategy)
+void
+SecondaryHierarchy::transferSecondaryToPrimary(const int level_number,
+                                               const int primary_data_idx,
+                                               const int scratch_data_idx,
+                                               const double data_time,
+                                               SAMRAI::xfer::RefinePatchStrategy<NDIM>* patch_strategy)
 {
     TBOX_ASSERT(d_secondary_hierarchy);
+    IBTK_TIMER_START(t_secondary_to_primary);
     const auto key = std::make_pair(level_number, std::make_pair(primary_data_idx, scratch_data_idx));
     if (d_transfer_backward_schedules.count(key) == 0)
     {
@@ -285,8 +306,9 @@ SecondaryHierarchy::getSecondaryToPrimarySchedule(const int level_number,
         d_transfer_backward_schedules[key] =
             refine_algorithm->createSchedule("DEFAULT_FILL", level, scratch_level, patch_strategy);
     }
-    return *d_transfer_backward_schedules[key];
-} // getSecondaryToPrimarySchedule
+    d_transfer_backward_schedules[key]->fillData(data_time);
+    IBTK_TIMER_STOP(t_secondary_to_primary);
+} // transferSecondaryToPrimary
 
 std::shared_ptr<IBTK::SAMRAIDataCache>
 SecondaryHierarchy::getSAMRAIDataCache()

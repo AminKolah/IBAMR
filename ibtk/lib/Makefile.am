@@ -1,6 +1,6 @@
 ## ---------------------------------------------------------------------
 ##
-## Copyright (c) 2011 - 2020 by the IBAMR developers
+## Copyright (c) 2011 - 2021 by the IBAMR developers
 ## All rights reserved.
 ##
 ## This file is part of IBAMR.
@@ -104,6 +104,7 @@ DIM_DEPENDENT_SOURCES = \
 ../src/refine_ops/CartSideDoubleRT0Refine.cpp \
 ../src/refine_ops/CartSideDoubleSpecializedLinearRefine.cpp \
 ../src/refine_ops/LMarkerRefine.cpp \
+../src/solvers/solver_utilities.cpp \
 ../src/solvers/impls/BGaussSeidelPreconditioner.cpp \
 ../src/solvers/impls/BJacobiPreconditioner.cpp \
 ../src/solvers/impls/CCLaplaceOperator.cpp \

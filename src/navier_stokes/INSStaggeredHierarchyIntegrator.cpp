@@ -1409,11 +1409,12 @@ INSStaggeredHierarchyIntegrator::integrateHierarchy(const double current_time,
     const int expected_num_cycles = getNumberOfCycles();
     if (d_current_num_cycles != expected_num_cycles)
     {
-        IBAMR_DO_ONCE({
-            pout << "INSStaggeredHierarchyIntegrator::integrateHierarchy():\n"
-                 << "  WARNING: num_cycles = " << d_current_num_cycles
-                 << " but expected num_cycles = " << expected_num_cycles << ".\n";
-        });
+        IBAMR_DO_ONCE(
+            {
+                pout << "INSStaggeredHierarchyIntegrator::integrateHierarchy():\n"
+                     << "  WARNING: num_cycles = " << d_current_num_cycles
+                     << " but expected num_cycles = " << expected_num_cycles << ".\n";
+            });
     }
 
     // Update the state variables of any linked advection-diffusion solver.
@@ -2666,7 +2667,7 @@ INSStaggeredHierarchyIntegrator::reinitializeOperatorsAndSolvers(const double cu
         U_star_bc_coef->setSolutionTime(new_time);
         U_star_bc_coef->setTimeInterval(current_time, new_time);
     }
-    auto Phi_bc_coef = dynamic_cast<INSProjectionBcCoef*>(d_Phi_bc_coef);
+    auto Phi_bc_coef = dynamic_cast<INSProjectionBcCoef*>(d_Phi_bc_coef.get());
     Phi_bc_coef->setPhysicalBcCoefs(d_bc_coefs);
     Phi_bc_coef->setSolutionTime(0.5 * (current_time + new_time));
     Phi_bc_coef->setTimeInterval(current_time, new_time);
@@ -2713,7 +2714,7 @@ INSStaggeredHierarchyIntegrator::reinitializeOperatorsAndSolvers(const double cu
     if (d_pressure_solver)
     {
         d_pressure_solver->setPoissonSpecifications(P_problem_coefs);
-        d_pressure_solver->setPhysicalBcCoef(d_Phi_bc_coef);
+        d_pressure_solver->setPhysicalBcCoef(d_Phi_bc_coef.get());
         d_pressure_solver->setSolutionTime(half_time);
         d_pressure_solver->setTimeInterval(current_time, new_time);
         if (d_pressure_solver_needs_init)
@@ -2777,12 +2778,12 @@ INSStaggeredHierarchyIntegrator::reinitializeOperatorsAndSolvers(const double cu
         if (p_stokes_block_pc)
         {
             p_stokes_block_pc->setPressurePoissonSpecifications(P_problem_coefs);
-            p_stokes_block_pc->setPhysicalBcCoefs(d_U_star_bc_coefs, d_Phi_bc_coef);
+            p_stokes_block_pc->setPhysicalBcCoefs(d_U_star_bc_coefs, d_Phi_bc_coef.get());
             p_stokes_block_pc->setComponentsHaveNullspace(has_velocity_nullspace, has_pressure_nullspace);
         }
         else if (p_stokes_fac_pc)
         {
-            p_stokes_fac_pc->setPhysicalBcCoefs(d_U_star_bc_coefs, d_Phi_bc_coef);
+            p_stokes_fac_pc->setPhysicalBcCoefs(d_U_star_bc_coefs, d_Phi_bc_coef.get());
             p_stokes_fac_pc->setComponentsHaveNullspace(has_velocity_nullspace, has_pressure_nullspace);
         }
         else
@@ -2999,16 +3000,17 @@ INSStaggeredHierarchyIntegrator::getConvectiveTimeSteppingType(const int cycle_n
         else if (cycle_num > 0)
         {
             convective_time_stepping_type = MIDPOINT_RULE;
-            IBAMR_DO_ONCE({
-                pout << "INSStaggeredHierarchyIntegrator::integrateHierarchy():\n"
-                     << "  WARNING: convective_time_stepping_type = "
-                     << enum_to_string<TimeSteppingType>(d_convective_time_stepping_type)
-                     << " but num_cycles = " << d_current_num_cycles << " > 1.\n"
-                     << "           using " << enum_to_string<TimeSteppingType>(d_convective_time_stepping_type)
-                     << " only for the first cycle in each time step;\n"
-                     << "           using " << enum_to_string<TimeSteppingType>(convective_time_stepping_type)
-                     << " for subsequent cycles.\n";
-            });
+            IBAMR_DO_ONCE(
+                {
+                    pout << "INSStaggeredHierarchyIntegrator::integrateHierarchy():\n"
+                         << "  WARNING: convective_time_stepping_type = "
+                         << enum_to_string<TimeSteppingType>(d_convective_time_stepping_type)
+                         << " but num_cycles = " << d_current_num_cycles << " > 1.\n"
+                         << "           using " << enum_to_string<TimeSteppingType>(d_convective_time_stepping_type)
+                         << " only for the first cycle in each time step;\n"
+                         << "           using " << enum_to_string<TimeSteppingType>(convective_time_stepping_type)
+                         << " for subsequent cycles.\n";
+                });
         }
     }
     return convective_time_stepping_type;

@@ -1,6 +1,6 @@
 ## ---------------------------------------------------------------------
 ##
-## Copyright (c) 2014 - 2019 by the IBAMR developers
+## Copyright (c) 2014 - 2021 by the IBAMR developers
 ## All rights reserved.
 ##
 ## This file is part of IBAMR.
@@ -49,6 +49,20 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 AC_MSG_RESULT([${PETSC_VERSION_VALID}])
 if test "$PETSC_VERSION_VALID" = no; then
   AC_MSG_ERROR([invalid PETSc version detected: please use PETSc 3.7 or newer])
+fi
+
+AC_MSG_CHECKING([for 64 bit PetscInt])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <petscconf.h>
+#ifdef PETSC_USE_64BIT_INDICES
+/* OK */
+#else
+#error
+#endif
+]])],[PETSC_HAVE_64BIT_INDICES=yes],[PETSC_HAVE_64BIT_INDICES=no])
+AC_MSG_RESULT([${PETSC_HAVE_64BIT_INDICES}])
+if test "$PETSC_HAVE_64BIT_INDICES" = yes; then
+  AC_MSG_ERROR([invalid PETSc version detected: IBAMR does not support 64bit indices in PETSc. Compile PETSc without 64bit indices (i.e., use --with-64-bit-indices=off)])
 fi
 
 PETSC_LDFLAGS=""

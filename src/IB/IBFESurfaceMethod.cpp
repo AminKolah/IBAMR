@@ -92,7 +92,6 @@
 #include "ibamr/namespaces.h" // IWYU pragma: keep
 
 IBTK_DISABLE_EXTRA_WARNINGS
-#include <boost/math/special_functions/round.hpp>
 #include <boost/multi_array.hpp>
 IBTK_ENABLE_EXTRA_WARNINGS
 
@@ -200,10 +199,6 @@ IBFESurfaceMethod::IBFESurfaceMethod(const std::string& object_name,
 
 IBFESurfaceMethod::~IBFESurfaceMethod()
 {
-    for (unsigned int part = 0; part < d_num_parts; ++part)
-    {
-        delete d_equation_systems[part];
-    }
     if (d_registered_for_restart)
     {
         RestartManager::getManager()->unregisterRestartItem(d_object_name);
@@ -1076,8 +1071,8 @@ IBFESurfaceMethod::initializeFEEquationSystems()
     for (unsigned int part = 0; part < d_num_parts; ++part)
     {
         // Create FE equation systems objects and corresponding variables.
-        d_equation_systems[part] = new EquationSystems(*d_meshes[part]);
-        EquationSystems* equation_systems = d_equation_systems[part];
+        d_equation_systems[part].reset(new EquationSystems(*d_meshes[part]));
+        EquationSystems* equation_systems = d_equation_systems[part].get();
         if (from_restart)
         {
             const std::string& file_name = libmesh_restart_file_name(
@@ -1182,7 +1177,7 @@ IBFESurfaceMethod::initializeFEData()
     for (unsigned int part = 0; part < d_num_parts; ++part)
     {
         // Initialize FE equation systems.
-        EquationSystems* equation_systems = d_equation_systems[part];
+        EquationSystems* equation_systems = d_equation_systems[part].get();
         if (from_restart)
         {
             equation_systems->reinit();
@@ -1587,7 +1582,7 @@ IBFESurfaceMethod::imposeJumpConditions(const int f_data_idx,
                         const libMesh::Point x = r + intersection.first * q;
                         const libMesh::Point& xi = intersection.second;
                         SideIndex<NDIM> i_s(i_c, axis, 0);
-                        i_s(axis) = boost::math::iround((x(axis) - x_lower[axis]) / dx[axis]) + patch_lower[axis];
+                        i_s(axis) = static_cast<int>(std::round((x(axis) - x_lower[axis]) / dx[axis])) + patch_lower[axis];
                         if (extended_box.contains(i_s))
                         {
                             std::vector<libMesh::Point> ref_coords(1, xi);

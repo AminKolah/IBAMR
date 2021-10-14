@@ -1070,11 +1070,12 @@ INSCollocatedHierarchyIntegrator::integrateHierarchy(const double current_time,
     const int expected_num_cycles = getNumberOfCycles();
     if (d_current_num_cycles != expected_num_cycles)
     {
-        IBAMR_DO_ONCE({
-            pout << "INSCollocatedHierarchyIntegrator::integrateHierarchy():\n"
-                 << "  WARNING: num_cycles = " << d_current_num_cycles
-                 << " but expected num_cycles = " << expected_num_cycles << ".\n";
-        });
+        IBAMR_DO_ONCE(
+            {
+                pout << "INSCollocatedHierarchyIntegrator::integrateHierarchy():\n"
+                     << "  WARNING: num_cycles = " << d_current_num_cycles
+                     << " but expected num_cycles = " << expected_num_cycles << ".\n";
+            });
     }
 
     // Perform a single step of fixed point iteration.
@@ -1126,16 +1127,17 @@ INSCollocatedHierarchyIntegrator::integrateHierarchy(const double current_time,
         else if (cycle_num > 0)
         {
             convective_time_stepping_type = MIDPOINT_RULE;
-            IBAMR_DO_ONCE({
-                pout << "INSStaggeredHierarchyIntegrator::integrateHierarchy():\n"
-                     << "  WARNING: convective_time_stepping_type = "
-                     << enum_to_string<TimeSteppingType>(d_convective_time_stepping_type)
-                     << " but num_cycles = " << d_current_num_cycles << " > 1.\n"
-                     << "           using " << enum_to_string<TimeSteppingType>(d_convective_time_stepping_type)
-                     << " only for the first cycle in each time step;\n"
-                     << "           using " << enum_to_string<TimeSteppingType>(convective_time_stepping_type)
-                     << " for subsequent cycles.\n";
-            });
+            IBAMR_DO_ONCE(
+                {
+                    pout << "INSStaggeredHierarchyIntegrator::integrateHierarchy():\n"
+                         << "  WARNING: convective_time_stepping_type = "
+                         << enum_to_string<TimeSteppingType>(d_convective_time_stepping_type)
+                         << " but num_cycles = " << d_current_num_cycles << " > 1.\n"
+                         << "           using " << enum_to_string<TimeSteppingType>(d_convective_time_stepping_type)
+                         << " only for the first cycle in each time step;\n"
+                         << "           using " << enum_to_string<TimeSteppingType>(convective_time_stepping_type)
+                         << " for subsequent cycles.\n";
+                });
         }
     }
     if (!d_creeping_flow && convective_time_stepping_type != FORWARD_EULER)
@@ -1727,7 +1729,7 @@ INSCollocatedHierarchyIntegrator::resetHierarchyConfigurationSpecialized(
                                                        DATA_COARSEN_TYPE,
                                                        d_bdry_extrap_type,
                                                        CONSISTENT_TYPE_2_BDRY,
-                                                       d_Phi_bc_coef);
+                                                       d_Phi_bc_coef.get());
     d_Phi_bdry_bc_fill_op = new HierarchyGhostCellInterpolation();
     d_Phi_bdry_bc_fill_op->initializeOperatorState(Phi_bc_component, d_hierarchy);
 
@@ -2114,7 +2116,7 @@ INSCollocatedHierarchyIntegrator::reinitializeOperatorsAndSolvers(const double c
         U_star_bc_coef->setSolutionTime(new_time);
         U_star_bc_coef->setTimeInterval(current_time, new_time);
     }
-    auto Phi_bc_coef = dynamic_cast<INSProjectionBcCoef*>(d_Phi_bc_coef);
+    auto Phi_bc_coef = dynamic_cast<INSProjectionBcCoef*>(d_Phi_bc_coef.get());
     Phi_bc_coef->setPhysicalBcCoefs(d_bc_coefs);
     Phi_bc_coef->setSolutionTime(0.5 * (current_time + new_time));
     Phi_bc_coef->setTimeInterval(current_time, new_time);
@@ -2160,7 +2162,7 @@ INSCollocatedHierarchyIntegrator::reinitializeOperatorsAndSolvers(const double c
     if (d_pressure_solver)
     {
         d_pressure_solver->setPoissonSpecifications(P_problem_coefs);
-        d_pressure_solver->setPhysicalBcCoef(d_Phi_bc_coef);
+        d_pressure_solver->setPhysicalBcCoef(d_Phi_bc_coef.get());
         d_pressure_solver->setSolutionTime(half_time);
         d_pressure_solver->setTimeInterval(current_time, new_time);
         auto p_pressure_solver = dynamic_cast<LinearSolver*>(d_pressure_solver.getPointer());
