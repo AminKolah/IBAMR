@@ -150,6 +150,10 @@ main(int argc, char* argv[])
     SAMRAI_MPI::setCommunicator(PETSC_COMM_WORLD);
     SAMRAI_MPI::setCallAbortInSerialInsteadOfExit();
     SAMRAIManager::startup();
+    
+    PetscOptionsSetValue(nullptr, "-ksp_rtol", "1e-10");
+    PetscOptionsSetValue(nullptr, "-stokes_ksp_atol", "1e-10");
+
 
     { // cleanup dynamically allocated objects prior to shutdown
 
@@ -191,8 +195,6 @@ main(int argc, char* argv[])
         
          AA = input_db->getDouble("AA");	// radius of the inner circle
          BB = input_db->getDouble("BB");    // radius of the outer circle 
-        const double mfac = input_db->getDouble("MFAC");
-        const double Re = input_db->getDouble("Re");
         shift = input_db->getDouble("SHIFT");
         fac = input_db->getDouble("FAC");
         const double ds = input_db->getDouble("MFAC") * dx;
@@ -222,7 +224,6 @@ main(int argc, char* argv[])
 			   inner_mesh.add_point(libMesh::Point(R1*cos(theta), R1*sin(theta), -0.5*L + L*static_cast<Real>(j)/static_cast<Real>(NXi_elem)), node_id++);
 			}
 		}
-        BoundaryInfo& boundary_info_inner = inner_mesh.get_boundary_info(); 
         
       
         
@@ -494,15 +495,14 @@ main(int argc, char* argv[])
         for (int ln = coarsest_ln; ln <= finest_ln; ++ln)
         {
             patch_hierarchy->getPatchLevel(ln)->allocatePatchData(u_cloned_idx, loop_time);
-patch_hierarchy->getPatchLevel(ln)->allocatePatchData(p_cloned_idx, loop_time);
+			patch_hierarchy->getPatchLevel(ln)->allocatePatchData(p_cloned_idx, loop_time);
         }
         u_init->setDataOnPatchHierarchy(u_cloned_idx, u_var, patch_hierarchy, loop_time);
-p_init->setDataOnPatchHierarchy(p_cloned_idx, p_var, patch_hierarchy, loop_time - 0.5 * dt);
+		p_init->setDataOnPatchHierarchy(p_cloned_idx, p_var, patch_hierarchy, loop_time - 0.5 * dt);
 
         hier_math_ops.setPatchHierarchy(patch_hierarchy);
         hier_math_ops.resetLevels(coarsest_ln, finest_ln);
         const int wgt_sc_idx = hier_math_ops.getSideWeightPatchDescriptorIndex();
-        const int wgt_cc_idx = hier_math_ops.getCellWeightPatchDescriptorIndex();
             HierarchySideDataOpsReal<NDIM, double> hier_sc_data_ops(patch_hierarchy, coarsest_ln, finest_ln);
             hier_sc_data_ops.subtract(u_idx, u_idx, u_cloned_idx);
             pout << std::setprecision(16) << "Error in u at time " << loop_time << ":\n"
@@ -750,10 +750,6 @@ void pressure_convergence(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                 {
                     const CellIndex<NDIM>& cell_idx = *bit;
                     
-                    
-                    const double z =
-                    patch_x_lower[2] + patch_dx[2] * (cell_idx(2) - patch_lower(2) + 0.5);
-                    
                     const double y =
                     patch_x_lower[1] + patch_dx[1] * (cell_idx(1) - patch_lower(1) + 0.5);
                     const double x =
@@ -889,9 +885,6 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
         }
     }
     SAMRAI_MPI::sumReduction(F_integral, NDIM);
-    static const double rho = 1.0;
-    static const double U_max = 1.0;
-    static const double D = 1.0;
 
     
 
@@ -990,9 +983,7 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
 					
 					double ex_wss[NDIM];
                     double ex_U[NDIM];
-                    double WSS_length;
 
-					//pout << WSS_length << "\n\n";
 					ex_U[0] =(-x_qp(1)/sqrt(x_qp(0)*x_qp(0) + x_qp(1)*x_qp(1))) * R1*OMEGA1;
 					ex_U[1] = (x_qp(0)/sqrt(x_qp(0)*x_qp(0) + x_qp(1)*x_qp(1))) * R1*OMEGA1;
 					ex_U[2] = 0.0;
