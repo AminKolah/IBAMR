@@ -73,7 +73,6 @@ tether_force_function(VectorValue<double>& F,
 using namespace ModelData;
 
 // Function prototypes
-static ofstream force_coeff_stream;
 
 void postprocess_data(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                       Pointer<INSHierarchyIntegrator> navier_stokes_integrator,
@@ -81,6 +80,7 @@ void postprocess_data(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                       EquationSystems* equation_systems,
                       const int iteration_num,
                       const double loop_time,
+                      ostream& force_coeff_stream,
                       const string& data_dump_dirname);
 
 /*******************************************************************************
@@ -103,6 +103,9 @@ main(int argc, char* argv[])
     SAMRAI_MPI::setCallAbortInSerialInsteadOfExit();
     SAMRAIManager::startup();
 
+    PetscOptionsSetValue(nullptr, "-ksp_rtol", "1e-10");
+    PetscOptionsSetValue(nullptr, "-stokes_ksp_atol", "1e-10");
+    
     { // cleanup dynamically allocated objects prior to shutdown
 
         // Parse command line options, set some standard options from the input
@@ -345,9 +348,10 @@ main(int argc, char* argv[])
 
         // Open streams to save lift and drag coefficients and the norms of the
         // velocity.
+        ofstream force_coeff_stream;
         if (SAMRAI_MPI::getRank() == 0)
         {
-            force_coeff_stream.open("output");
+            force_coeff_stream.open("force_coeffs.curve");
         }
         
         // Main time step loop.
@@ -407,6 +411,7 @@ main(int argc, char* argv[])
                                  equation_systems,
                                   iteration_num,
                                  loop_time,
+                                 force_coeff_stream,
                                   postproc_data_dump_dirname);
             }
         }
@@ -434,6 +439,7 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
                  EquationSystems* equation_systems,
                  const int /*iteration_num*/,
                  const double loop_time,
+                 ostream& force_coeff_stream,
                  const string& /*data_dump_dirname*/)
 {
 

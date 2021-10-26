@@ -119,7 +119,6 @@ static double x_loc_min, x_loc_max, z_loc_min, z_loc_max, y_loc_min, y_loc_max;
 }
 using namespace ModelData;
 
-static ofstream flow_rate_stream;
 // Function prototypes
 void compute_velocity_profile(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                               const int u_idx,
@@ -154,6 +153,7 @@ void compute_flow_rate(const double dt,
                        const Pointer<PatchHierarchy<NDIM> > hierarchy,
                        const int U_idx,
                        const double loop_time,
+                       ostream& flow_rate_stream,
                        const int wgt_sc_idx);
 /*******************************************************************************
  * For each run, the input filename and restart information (if needed) must   *
@@ -173,6 +173,9 @@ int main(int argc, char* argv[])
     SAMRAI_MPI::setCommunicator(PETSC_COMM_WORLD);
     SAMRAI_MPI::setCallAbortInSerialInsteadOfExit();
     SAMRAIManager::startup();
+    
+    PetscOptionsSetValue(nullptr, "-ksp_rtol", "1e-10");
+    PetscOptionsSetValue(nullptr, "-stokes_ksp_atol", "1e-10");
 
     { // cleanup dynamically allocated objects prior to shutdown
 
@@ -431,10 +434,11 @@ int main(int argc, char* argv[])
                                           iteration_num / viz_dump_interval + 1, loop_time);
             }
         }
-
+        
+		ofstream flow_rate_stream;
         if (SAMRAI_MPI::getRank() == 0)
         {
-            flow_rate_stream.open("output");
+            flow_rate_stream.open("flow_rate.curve");
         }
         // Main time step loop.
 
@@ -460,7 +464,6 @@ int main(int argc, char* argv[])
             pout << "Simulation time is " << loop_time << "\n";
             pout << "+++++++++++++++++++++++++++++++++++++++++++++++++++\n";
             pout << "\n";
-            VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
             Pointer<hier::Variable<NDIM> > u_var = time_integrator->getVelocityVariable();
             Pointer<VariableContext> current_ctx = time_integrator->getCurrentContext();
 
@@ -514,7 +517,7 @@ int main(int argc, char* argv[])
 				hier_math_ops.resetLevels(coarsest_ln, finest_ln);
 				const int wgt_sc_idx = hier_math_ops.getSideWeightPatchDescriptorIndex();
 				 
-				compute_flow_rate(dt, patch_hierarchy, u_idx, loop_time, wgt_sc_idx);  
+				compute_flow_rate(dt, patch_hierarchy, u_idx, loop_time, flow_rate_stream, wgt_sc_idx);  
 			}
 
 			pout << "\nWriting state data...\n\n";
@@ -1155,6 +1158,7 @@ void compute_flow_rate(const double dt,
                        const Pointer<PatchHierarchy<NDIM> > hierarchy,
                        const int U_idx,
                        const double loop_time,
+                       ostream& flow_rate_stream,
                        const int wgt_sc_idx)
 {
 	vector<double> qsrc;

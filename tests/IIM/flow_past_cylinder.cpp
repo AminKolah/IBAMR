@@ -43,6 +43,8 @@
 #include <ibtk/libmesh_utilities.h>
 #include <ibtk/muParserCartGridFunction.h>
 #include <ibtk/muParserRobinBcCoefs.h>
+#include <ibtk/IBTKInit.h>
+#include <ibtk/IBTK_MPI.h>
 
 // Set up application namespace declarations
 #include <ibamr/app_namespaces.h>
@@ -120,13 +122,13 @@ tether_force_function(VectorValue<double>& F,
 using namespace ModelData;
 
 // Function prototypes
-static ofstream force_coeff_stream;
 void postprocess_data(Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                       Pointer<INSHierarchyIntegrator> navier_stokes_integrator,
                       Mesh& mesh,
                       EquationSystems* equation_systems,
                       const int iteration_num,
                       const double loop_time,
+                      ostream& force_coeff_stream,
                       const string& data_dump_dirname);
 
 /*******************************************************************************
@@ -148,6 +150,9 @@ main(int argc, char* argv[])
     SAMRAI_MPI::setCommunicator(PETSC_COMM_WORLD);
     SAMRAI_MPI::setCallAbortInSerialInsteadOfExit();
     SAMRAIManager::startup();
+    
+     PetscOptionsSetValue(nullptr, "-ksp_rtol", "1e-10");
+    PetscOptionsSetValue(nullptr, "-stokes_ksp_atol", "1e-10");
 
     { // cleanup dynamically allocated objects prior to shutdown
 
@@ -409,10 +414,10 @@ main(int argc, char* argv[])
 
         // Open streams to save lift and drag coefficients and the norms of the
         // velocity.
-        if (SAMRAI_MPI::getRank() == 0)
-        {
-            force_coeff_stream.open("output");
-        }
+         ofstream force_coeff_stream;
+        
+         if (!IBTK_MPI::getRank()) force_coeff_stream.open("force_coeffs.curve");
+
         
 
         // Main time step loop.
@@ -470,12 +475,24 @@ main(int argc, char* argv[])
                 pout << "\nWriting timer data...\n\n";
                 TimerManager::getManager()->print(plog);
             }
+            
+            if (dump_postproc_data && (iteration_num % postproc_data_dump_interval == 0 || last_step))
+            {
+                 postprocess_data(patch_hierarchy,
+                                  navier_stokes_integrator,
+                                  mesh,
+                                 equation_systems,
+                                  iteration_num,
+                                 loop_time,
+                                 force_coeff_stream,
+                                  postproc_data_dump_dirname);
+            }
 
 			
         }
 
         // Close the logging streams.
-        if (SAMRAI_MPI::getRank() == 0)
+        if (IBTK_MPI::getRank() == 0)
         {
             force_coeff_stream.close();
         }
@@ -497,6 +514,7 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
                  EquationSystems* equation_systems,
                  const int /*iteration_num*/,
                  const double loop_time,
+                 ostream& force_coeff_stream,
                  const string& /*data_dump_dirname*/)
 {
 
@@ -585,16 +603,16 @@ postprocess_data(Pointer<PatchHierarchy<NDIM> > /*patch_hierarchy*/,
         }
     
     }
-    SAMRAI_MPI::sumReduction(F_integral, NDIM);
-    SAMRAI_MPI::sumReduction(T_integral, NDIM);
+    IBTK_MPI::sumReduction(F_integral, NDIM);
+    IBTK_MPI::sumReduction(T_integral, NDIM);
 
 
     static const double D = 1.0;
-    if (SAMRAI_MPI::getRank() == 0)
+    if (IBTK_MPI::getRank() == 0)
     {
-    force_coeff_stream.precision(12);
-                force_coeff_stream.setf(ios::fixed, ios::floatfield);
-                force_coeff_stream << loop_time << "\t" << 2.0 * -F_integral[0] / (0.25 * D * D * M_PI) << "\t" << 2.0 * -F_integral[1] / (0.25 * D * D * M_PI) << "\t"
+		force_coeff_stream.precision(12);
+        force_coeff_stream.setf(ios::fixed, ios::floatfield);
+        force_coeff_stream << loop_time << "\t" << 2.0 * -F_integral[0] / (0.25 * D * D * M_PI) << "\t" << 2.0 * -F_integral[1] / (0.25 * D * D * M_PI) << "\t"
                            << 2.0 * T_integral[0] / (0.25 * D * D * M_PI) << "\t" << 2.0 * T_integral[1] / (0.25 * D * D * M_PI) << endl;
  
     }

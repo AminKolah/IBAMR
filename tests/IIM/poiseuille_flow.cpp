@@ -440,7 +440,7 @@ main(int argc, char* argv[])
         // velocity.
         if (SAMRAI_MPI::getRank() == 0)
         {
-			p_norm_stream.open("output");
+			p_norm_stream.open("p_norm.curve");
         }
         
         // Main time step loop.
@@ -474,7 +474,6 @@ main(int argc, char* argv[])
             
 			//****** Check to see if the solution is reached steady state ***********//           
 			
-            VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
             Pointer<hier::Variable<NDIM> > u_var = time_integrator->getVelocityVariable();
             Pointer<VariableContext> current_ctx = time_integrator->getCurrentContext();
             
