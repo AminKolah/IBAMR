@@ -1314,10 +1314,16 @@ IIMethod::interpolateVelocity(const int u_data_idx,
                                 const hier::Index<NDIM>& ic = b();
                                 for (int j = 0; j < NDIM; ++j) wrc(j) = wr[j][ic_upper[j] - ic[j]];
 #if (NDIM == 2)
-                                interpCoeff[ic[0]][ic[1]][d] = (norm_vec * wrc) * norm_vec(d);
+                                if (d_use_cartesian_distance_interp)
+                                    interpCoeff[ic[0]][ic[1]][d] = wrc(d);
+                                else
+                                   interpCoeff[ic[0]][ic[1]][d] = (norm_vec * wrc) * norm_vec(d);
 #endif
 #if (NDIM == 3)
-                                interpCoeff[ic[0]][ic[1]][ic[2]][d] = (norm_vec * wrc) * norm_vec(d);
+                                if (d_use_cartesian_distance_interp)
+                                    interpCoeff[ic[0]][ic[1]][ic[2]][d] = wrc(d);
+                                else
+                                    interpCoeff[ic[0]][ic[1]][ic[2]][d] = (norm_vec * wrc) * norm_vec(d);
 #endif
                             }
                         }
@@ -4430,6 +4436,8 @@ IIMethod::getFromInput(Pointer<Database> db, bool /*is_from_restart*/)
 	}
     if (db->isBool("use_u_interp_correction"))
         d_use_u_interp_correction = db->getBool("use_u_interp_correction");
+    if (db->isBool("use_cartesian_distance_interp"))
+        d_use_cartesian_distance_interp = db->getBool("use_cartesian_distance_interp");
     if (d_use_velocity_jump_conditions && d_use_u_interp_correction)
     {
         if (db->isDouble("wss_calc_width")) d_wss_calc_width = db->getDouble("wss_calc_width");
